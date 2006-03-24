@@ -1,0 +1,5 @@
+useDynLib(nltm)
+import(survival)
+export (
+	"nltm"
+	)
