@@ -8,19 +8,20 @@
 \alias{initSurvival}
 \alias{nPredictor}
 \alias{reverseCumsum}
-\title{Internal non linear transformation model functions}
-\description{Internal non linear transformation model functions}
+\alias{cureModel}
+\title{Internal non-linear transformation model functions}
+\description{Internal non-linear transformation model functions.}
 \usage{
-nltm.fit(x, y, model, init, control, verbose)
-profileLikR <- function(beta, x, status, count, s0, model, cure, tol,
-npred)
-boundary <- function(x, npred, cure)
-counts <- function(time, status)
+nltm.fit(x1, x2, y, model, init, control, verbose)
+profileLikR(beta, x1, x2, status, count, s0, model, cure, tol, nvar1,
+            nvar2, npred, verbose)
+boundary(x1, x2, npred, cure, bscale)
+counts(time, status)
 eventTimes(y)
-initSurvival <- function(count, cure)
+initSurvival(count, cure)
 nPredictor(model)
 reverseCumsum(a)
+cureModel(model)
 }
-\details{These are not to be called by the user}
-\keyword{survival}
+\details{These are not to be called by the user.}
 \keyword{internal}

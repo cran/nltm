@@ -1,32 +1,45 @@
 # y[,1]: times
 # y[,2]: status
-# x: regression variables
+# x1: regression variables for first predictor (long term)
+# x2: regression variables for second predictor (short term)
 
-nltm.fit <- function(x, y, model, init, control, verbose)
+nltm.fit <- function(x1, x2, y, model, init, control, verbose)
 {
-#  cat(gettextf("problems if x is not a matrix x <- x[sorted,] would not work"))
-
   n <-  nrow(y)
-  if (is.matrix(x))
-    nvar <- ncol(x)   
+  if(is.matrix(x1))
+    nvar1 <- ncol(x1)   
   else
-    if (length(x)==0)
-      nvar <- 0
+    if (length(x1)==0)
+      nvar1 <- 0
     else
-      nvar <- 1
+      nvar1 <- 1
 
   npred <- nPredictor(model)
   cure <- cureModel(model)
-  nbeta <- npred*nvar+cure
+
+  if(npred>1){
+    if(is.null(x2)){
+      nbeta <- npred*nvar1+cure
+      x2 <- x1
+      nvar2 <- ncol(x2)
+    }else{
+      nvar2 <- ncol(x2)
+      nbeta <- nvar1+nvar2+cure
+    }
+  }else{
+    nbeta <- nvar1+cure
+    x2 <- 0
+    nvar2 <- 0
+  }
   
 
 ### THIS NEEDS TO BE CHECKED
-  if(nvar==0){
+  if(nvar1==0){
     # A special case: Null model.
-    #  (This is why I need the rownames arg- can't use x' names)
+    #  (This is why I need the rownames arg- can't use x1' names)
     # Set things up for 0 iterations on a dummy variable
-    x <- as.matrix(rep(1.0, n))
-    nvar <- 1
+    x1 <- as.matrix(rep(1.0, n))
+    nvar1 <- 1
     init <- 0
     maxiter <- 0
     nbeta <- npred
@@ -38,20 +51,29 @@ nltm.fit <- function(x, y, model, init, control, verbose)
   # used in the estimation
   sorted <- order(y[,1])
   nc.small <- length(which(y[,1]<min(y[y[,2]==1,1])))+1
-  ### See!!!! What happens if all observations are censored
+  # All observations are censored
+  if(nc.small>n)
+    stop("All observations are censored. The model cannot be fitted.\n")
   sorted <- sorted[nc.small:n]
   
   y <- y[sorted,]
-  x <- x[sorted,]
+
+  names <- dimnames(x1)
+  names[[1]] <- names[[1]][sorted]
+  x1 <- matrix(x1[sorted,], nrow=length(sorted), dimnames=names)
+  if(npred>1){
+    names <- dimnames(x2)
+    names[[1]] <- names[[1]][sorted]
+    x2 <- matrix(x2[sorted,], nrow=length(sorted), dimnames=names)
+  }
   time <- eventTimes(y)  # time and status correspond to stime and sstat in 
   status <- y[,2]        # coxph.fit
 
   count <- counts(time, status)
   isurv <- initSurvival(count, cure)
   s0 <- isurv$s0
-#  print("s0 init"); print(s0)
 
-  if(nvar!=0){
+  if(nvar1!=0){
     if (!missing(init) && !is.null(init)) {
       if (length(init) != nbeta) stop("Wrong length for inital values")
     }
@@ -61,48 +83,51 @@ nltm.fit <- function(x, y, model, init, control, verbose)
         init[nbeta] <- log(-log(isurv$tailDefect))
     }
   }    
-  bound <- boundary(x, npred, cure)
+  bound <- boundary(x1, x2, npred, cure, control$bscale)
   
   fit <- optim(par=init, fn=profileLikR, gr=NULL, method="L-BFGS-B",
                lower=-bound, upper=bound, control=control,
-               hessian=FALSE, x, status, count, s0, model, cure,
-               control$s0.tol, npred, verbose)
-#  print("s0 init"); print(s0)
-#  print("opt value"); print(fit$value)
+               hessian=FALSE, x1, x2, status, count, s0, model, cure,
+               control$s0.tol, nvar1, nvar2, npred, verbose)
 
   coef <- fit$par
-  names(coef) <- rep(dimnames(x)[[2]], npred)
+
+  if(npred==1)
+    names(coef) <- dimnames(x1)[[2]]
+  else
+    names(coef) <- c(dimnames(x1)[[2]],dimnames(x2)[[2]])
   if(cure)
     names(coef)[nbeta] <- "cure"
   
   # Find profile likelihood at initial values
-  lik0 <- .C("profileLik", coef=as.double(init), t(x), as.integer(status),
-             count$dd, count$rr, surv=as.double(s0), model, as.integer(cure),
-             control$s0.tol, ncol(x), nrow(count), nrow(x), as.integer(npred), 
-             as.integer(verbose), plik=double(1), PACKAGE="nltm")$plik
+  lik0 <- .C("profileLik", coef=as.double(init), t(x1), t(x2),
+             as.integer(status), count$dd, count$rr, surv=as.double(s0), model,
+             as.integer(cure), control$s0.tol, nvar1, nvar2, nrow(count),
+             nrow(x1), as.integer(npred), as.integer(verbose), plik=double(1),
+             PACKAGE="nltm")$plik
   
   # Find survival function at betaMLE
-  survMLE <- .C("profileLik", coef=as.double(coef), t(x), as.integer(status),
-                count$dd, count$rr, surv=as.double(s0), model,
-                as.integer(cure), control$s0.tol, ncol(x), nrow(count),
-                nrow(x), as.integer(npred), as.integer(verbose),
+  survMLE <- .C("profileLik", coef=as.double(coef), t(x1), t(x2),
+                as.integer(status), count$dd, count$rr, surv=as.double(s0),
+                model, as.integer(cure), control$s0.tol, nvar1, nvar2,
+                nrow(count), nrow(x1), as.integer(npred), as.integer(verbose),
                 plik=double(1), PACKAGE="nltm")$surv
- 
+  
   # Find covariance matrix
-  imat1 <- .C("informationMatrix", coef, t(x), as.integer(status), count$dd,
-              count$rr, survMLE, model, as.integer(cure), ncol(x), nrow(count),
-              nrow(x), as.integer(npred), as.integer(verbose),
-              imat=double(nbeta*nbeta), PACKAGE="nltm")$imat
+  imat1 <- .C("informationMatrix", coef, t(x1), t(x2), as.integer(status),
+              count$dd, count$rr, survMLE, model, as.integer(cure), nvar1,
+              nvar2, nrow(count), nrow(x1), as.integer(npred),
+              as.integer(verbose), imat=double(nbeta*nbeta),
+              PACKAGE="nltm")$imat
 
-#  print("imat"); print(imat1)
-#  print("det(imat)"); print(det(matrix(imat1, nbeta, nbeta)))
   # Invert information matrix
   cov <- solve(matrix(imat1, nbeta, nbeta))
-#  print("cov mat"); print(cov)
-#  print("1/det(cov)"); print(1/det(cov))
-  
+
+  counts <- fit$count[1]
+  names(counts) <- NULL
   list(coefficients=coef, loglik=c(lik0, fit$value), surv=survMLE,
-       iter=fit$counts, var=cov, n=n)
+       var=cov, n=n, maxit=control$maxit, counts=counts,
+       convergence=fit$convergence, message=fit$message)
 }
 
 
@@ -150,25 +175,29 @@ initSurvival <- function(count, cure)
   res
 }
 
-
 # compute boundaries for maximization
-boundary <- function(x, npred, cure)
+# Note: this function assumes that either length(bscale)=1 or
+# bscale=(bscale_theta, bscale_eta, bscale_cure)
+boundary <- function(x1, x2, npred, cure, bscale)
 {
-  r <- apply(abs(x), MARGIN=2, max)
+  r <- apply(abs(x1), MARGIN=2, max)
+  if(npred>1)
+    r <- c(r, apply(abs(x2), MARGIN=2, max))
   r <- ifelse(r<1e-10, 1e-10, r)
-  bound <- rep(5/r, npred)
+  
+  bound <- bscale/r
+  
   if(cure)
-    bound <- c(bound, 5)
+    bound <- c(bound, ifelse(length(bscale)>1, bscale[length(bscale)], bscale))
   bound
 }
 
 
 # control parameters for nltm
 nltm.control <- function(fnscale=-1, maxit=1000, reltol, factr=1e7, pgtol=0,
-                         s0.tol=1e-5)
+                         s0.tol=1e-5, bscale=5)
 {
   # control parameters for optimization (see optim help)
-  # fnscale=-1 for maximization, default is minimization
   if(fnscale>0) warning("Minimization will take place")
   if(maxit<=0) stop("Invalid value for iterations")
   if(!missing(reltol)) if(reltol<0) stop("Invalid convergence tolerance")
@@ -176,29 +205,29 @@ nltm.control <- function(fnscale=-1, maxit=1000, reltol, factr=1e7, pgtol=0,
   if(pgtol<0) stop("Invalid tolerance on the projected gradient")
 
   if(s0.tol<0) stop("Invalid convergence tolerance of hazard self-consistency")
+  if(sum(bscale<=0)>0) stop("Invalid bound scale")
   
   ifelse(missing(reltol), 
          control <- list(fnscale=fnscale, maxit=maxit, factr=factr,
-                         pgtol=pgtol, s0.tol=s0.tol),
+                         pgtol=pgtol, s0.tol=s0.tol, bscale=bscale),
          control <- list(fnscale=fnscale, maxit=maxit, reltol=reltol,
-                         factr=factr, pgtol=pgtol, s0.tol=s0.tol))
+                         factr=factr, pgtol=pgtol, s0.tol=s0.tol,
+                         bscale=bscale))
   control
 }
 
 
-profileLikR <- function(beta, x, status, count, s0, model, cure, tol, npred,
-                        verbose)
+profileLikR <- function(beta, x1, x2, status, count, s0, model, cure, tol,
+                        nvar1, nvar2, npred, verbose)
 {
-#  print("profileLikR")
-#  print(status)
   # need to transpose x otherwise when passed to C it is stored in a vector
   # by columns and I need it by rows because of dmat
-  res <- .C("profileLik", coef=as.double(beta), t(x), as.integer(status),
-            count$dd, count$rr, surv=as.double(s0), model, as.integer(cure),
-            tol, ncol(x), nrow(count), nrow(x), as.integer(npred),
-            as.integer(verbose), plik=double(1), PACKAGE="nltm")$plik 
+  res <- .C("profileLik", coef=as.double(beta), t(x1), t(x2),
+            as.integer(status), count$dd, count$rr, surv=as.double(s0), model,
+            as.integer(cure), tol, nvar1, nvar2, nrow(count), nrow(x1),
+            as.integer(npred), as.integer(verbose), plik=double(1),
+            PACKAGE="nltm")$plik 
 
-#  print(c(beta, res))
   res
 }
 

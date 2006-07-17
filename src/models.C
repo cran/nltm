@@ -17,16 +17,7 @@ using namespace std;
 #define PHPO 6
 #define ERROR -1
 #define BIG 100
-#define VERYBIG 1e30
 
-///////////////////////////////////////////
-// FALTA DER1[1]
-// void ThetonCurePHPOC_pred
-// verificar ThetonCure_pred
-///////////////////////////////////////////
-
-
-extern ofstream ofsDebug;
 
 void printDV(ofstream *ofs, vector<double> &a);
 // s: cumulative survival function
@@ -34,33 +25,24 @@ void printDV(ofstream *ofs, vector<double> &a);
 // pred: predictor. 
 //  single predictor: pred=exp(x*beta)
 //  single predictor cure: pred=exp(x*beta1+betac), beta=(beta1, betac)
-//  two predictors: pred=(exp(x*beta1), exp(x*beta2), beta=(beta1, beta2)
-//  two predictors cure: pred=(exp(x*beta1+betac), exp(x*beta2), 
+//  two predictors: pred=(exp(x*beta1), exp(x*beta2)), beta=(beta1, beta2)
+//  two predictors cure: pred=(exp(x*beta1+betac), exp(x*beta2)), 
 //  beta=(beta1, beta2, betac)
 
 // gammaD1 didn't seem to be used except when defining vtheta for
 // failure observations. vtheta for failure is gammaD1*s so it is
 // better to define it, similarly for the derivatives
 
-// gammaD2 doesn't seem to be in use - was not checked
-
 #define gammaPH(pred, s)(s<=0 ? 0 : (s>=1 ? 1 : pow(s, pred)))
 #define vthetafPH(pred,s)(s<=0 ? 0 : (s>=1 ? pred : pred*pow(s, pred)))
-#define gammaD2PH(pred, s)(s<=0 ? 0 : (s>=1 ? pred*(pred-1) : pred*(pred-1)*pow(s, pred-2)))
-#define ThetonCurePH(pred, s)(pred)
-#define ThetonCurePH_pred(pred, s)(1)
-#define ThetonCurePH_h(pred, s)(0)
-
 #define gammaPHC(pred, s)(s<=0 ? exp(-pred) : (s>=1 ? 1 : exp(-pred*(1-s))))
 #define vthetafPHC(pred, s)(s<=0 ? 0 : (s>=1 ? pred : pred*exp(-pred*(1-s))*s))
-#define gammaD2PHC(pred, s)(s<=0 ? pred*pred*exp(-pred) : (s>=1 ? pred*pred : pred*pred*exp(-pred*(1-s))))
 #define gammaPHC_pred(pred, s)(s<=0 ? -exp(-pred) : (s>=1 ? 0 : -exp(-pred*(1-s))*(1-s)))
 #define vthetafPHC_pred(pred, s)(s<=0 ? 0 : (s>=1 ? 1 : (1-pred*(1-s))*exp(-pred*(1-s))*s))
 #define gammaPHC_2pred(pred, s)(s<=0 ? exp(-pred) : (s>=1 ? 0 : (1-s)*(1-s)*exp(-pred*(1-s))))
 #define vthetafPHC_2pred(pred, s)(s<=0 || s>=1 ? 0 : (1-s)*(-2+pred*(1-s))*exp(-pred*(1-s))*s)
 
 #define gammaPO(pred, s)(s<=0 ? 0 : (s>=1 ? 1 : pred/(pred-log(s))))
-#define ThetonCurePO(pred, s)(s<=0 ? 0 : (s>=1 ? 1/pred : 1/(pred-log(s))))
 
 ///////////////////////////////
 //         PH model          //
@@ -132,7 +114,7 @@ double ThetonPH(double pred, double s, int cc)
     return(pred);
     break;
   default:
-    cerr<<"ThetonPH: Observation not censored or failure";
+    cerr<<"ThetonPH: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -147,7 +129,7 @@ double ThetonPH_pred(double pred, double s, int cc)
     return(1);
     break;
   default:
-    cerr<<"ThetonPH_pred: Observation not censored or failure";
+    cerr<<"ThetonPH_pred: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -162,7 +144,7 @@ double ThetonPH_h(double pred, double s, int cc)
     return(0);
     break;
   default:
-    cerr<<"ThetonPH_h: Observation not censored or failure";
+    cerr<<"ThetonPH_h: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -181,7 +163,7 @@ double ThetonPHC(double pred, double s, int cc)
     return((s<=0 ? 1 : (s>=1 ? 1+pred : 1+pred*s)));
     break;
   default:
-    cerr<<"ThetonPHC: Observation not censored or failure";
+    cerr<<"ThetonPHC: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -196,7 +178,7 @@ double ThetonPHC_pred(double pred, double s, int cc)
     return((s<=0 ? 0 : (s>=1 ? 1 : s)));
     break;
   default:
-    cerr<<"ThetonPHC: Observation not censored or failure";
+    cerr<<"ThetonPHC: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -211,7 +193,7 @@ double ThetonPHC_h(double pred, double s, int cc)
     return((s<=0 ? 0 : (s>=1 ? -pred : -pred*s)));
     break;
   default:
-    cerr<<"ThetonPHC: Observation not censored or failure";
+    cerr<<"ThetonPHC: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -289,22 +271,6 @@ double vthetafPO(double pred, double s)
   }
 }
 
-// Second derivative of gammaPO with respect to s
-double gammaD2PO(double pred, double s)
-{
-  double aux;
-
-  if(s<=0)
-    return(0);
-  else{
-    if(s>=1)
-      return((pred-2)/(pred*pred));
-    else{
-      aux=pred-log(s);
-      return(-pred*(aux-2)/(s*s*aux*aux*aux));
-    }
-  }
-}
 
 // First derivative of gammaPO with respect to pred
 double gammaPO_pred(double pred, double s)
@@ -423,39 +389,6 @@ double ThetonPO_pred(double pred, double s, int cc)
   return(ERROR);
 }
 
-double ThetonCurePO_pred(double pred, double s)
-{
-  double aux;
-
-  if(s<=0)
-    return(0);
-  else{
-    if(s>=1)
-      return(-1/pred/pred);
-    else{
-      aux=pred-log(s);
-      return(-1/aux/aux);
-    }
-  }
-}
-
-double ThetonCurePO_h(double pred, double s)
-{
-  double aux;
-
-  if(s<=0)
-    return(0);
-  else{
-    if(s>=1)
-      return(-1/pred/pred);
-    else{
-      aux=pred-log(s);
-      return(-1/aux/aux);
-    }
-  }
-}
-
-
 
 ///////////////////////////////
 //        PHPHC model        //    
@@ -483,23 +416,6 @@ double vthetafPHPHC(vector<double> &pred, double s)
   }
 }
 
-double gammaD2PHPHC(vector<double> &pred, double s)
-{
-  double aux1, aux2, prod;
-
-  if(s<=0)
-    return(0);
-  else{
-    prod=pred[0]*pred[1];
-    if(s>=1)
-      return(prod*(prod+pred[1]-1));
-    else{
-      aux1=pow(s, pred[1]-2);
-      aux2=aux1*s;
-      return(exp(-pred[0]*(1-aux2*s))*prod*(prod*aux2*aux2+(pred[1]-1)*aux1));
-    }
-  }
-}
 
 // First derivative of gammaPHPHC with respect to pred
 void gammaPHPHC_pred(vector<double> &pred, double s, vector<double> &der1)
@@ -597,6 +513,7 @@ void vthetafPHPHC_2pred(vector<double> &pred, double s, vector<double> &der2)
       aux4=pred[0]*pred[1]*aux3;
    
       der2[0]=-aux2*pred[1]*(1-aux1)*(2-pred[0]*(1-aux1));
+      der2[0]=(isnan(der2[0]) ? 0 : der2[0]);
       der2[1]=aux2*pred[0]*aux3*(pred[0]*aux1*aux1*aux4+2*pred[0]*aux1+
 				 3*aux1*aux4+pred[1]*aux3+2);
       der2[1]=(isnan(der2[1]) ? 0 : der2[1]);
@@ -619,7 +536,7 @@ double ThetonPHPHC(vector<double> &pred, double s, int cc)
 			      pred[1]*(pred[0]*pow(s, pred[1])+1))));
     break;
   default:
-    cerr<<"ThetonPHPHC: Observation not censored or failure";
+    cerr<<"ThetonPHPHC: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -658,12 +575,12 @@ void ThetonPHPHC_pred(vector<double> &pred, double s, int cc,
 	aux1=pow(s,pred[1]);
 	der1[0]=pred[1]*aux1;
 	der1[1]=pred[0]*aux1*(1+pred[1]*log(s))+1;
-	der1[1]=(isnan(der1[1]) ? 0 : der1[1]);
+	der1[1]=(isnan(der1[1]) ? 1 : der1[1]);
       }
     }
     break;
   default:
-    cerr<<"ThetonPHPHC_pred: Observation not censored or failure";
+    cerr<<"ThetonPHPHC_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -679,7 +596,7 @@ double ThetonPHPHC_h(vector<double> &pred, double s, int cc)
 			-pred[0]*pred[1]*pred[1]*pow(s, pred[1]))));
     break;
   default:
-    cerr<<"ThetonPHPHC_h: Observation not censored or failure";
+    cerr<<"ThetonPHPHC_h: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -707,7 +624,7 @@ void ThetonCurePHPHC_pred(vector<double> &pred, double s, vector<double> &der1)
 
   if(s<=0){
     der1[0]=0;
-    der1[1]=-VERYBIG;
+    der1[1]=1;
   }else{
     if(s>=1){
       aux1=exp(-pred[0]);
@@ -720,7 +637,7 @@ void ThetonCurePHPHC_pred(vector<double> &pred, double s, vector<double> &der1)
       der1[0]=(isnan(der1[0]) ? 0 : der1[0]);
       aux1*=pred[0];
       der1[1]=aux1/(1-aux2)*(1+pred[1]*log(s)*(1-aux2*(1+aux1))/(1-aux2));
-      der1[1]=(isnan(der1[1]) ? -VERYBIG : der1[1]);
+      der1[1]=(isnan(der1[1]) ? 1 : der1[1]);
     }
   }
 }
@@ -771,22 +688,6 @@ double vthetafPHPOC(vector<double> &pred, double s)
   }
 }
 
-double gammaD2PHPOC(vector<double> &pred, double s)
-{
-  double aux, prod=pred[0]*pred[1];
-
-  if(s<=0)
-    return(exp(-pred[0])*prod*prod+2*prod*(1-pred[1]));
-  else{
-    if(s>=1)
-      return(prod*prod+2*prod*pred[1]*(1-pred[1]));
-    else{
-      aux=1-(1-pred[1])*s;
-      return(exp(-pred[0]*(1-s)/aux)*prod/pow(aux, 4)*
-	     (prod+2*(1-pred[1])-2*(1-pred[1])*(1-pred[1])*s));
-    }
-  }
-}
 
 // First derivative of gammaPHPOC with respect to pred
 void gammaPHPOC_pred(vector<double> &pred, double s, vector<double> &der1)
@@ -918,7 +819,7 @@ double ThetonPHPOC(vector<double> &pred, double s, int cc)
     }
     break;
   default:
-    cerr<<"ThetonPHPOC: Observation not censored or failure";
+    cerr<<"ThetonPHPOC: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -964,7 +865,7 @@ void ThetonPHPOC_pred(vector<double> &pred, double s, int cc,
     }
     break;
   default:
-    cerr<<"ThetonPHPOC_pred: Observation not censored or failure";
+    cerr<<"ThetonPHPOC_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -999,7 +900,7 @@ double ThetonPHPOC_h(vector<double> &pred, double s, int cc)
     }
     break;
   default:
-    cerr<<"ThetonPHPOC_h: Observation not censored or failure";
+    cerr<<"ThetonPHPOC_h: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -1023,45 +924,53 @@ double ThetonCurePHPOC(vector<double> &pred, double s)
   }
 }
 
-// FALTA DER1[1]
+
 void ThetonCurePHPOC_pred(vector<double> &pred, double s, vector<double> &der1)
 {
-  double aux1, aux2, aux3;
+  double aux1, aux2, aux3, aux4;
   
   if(s<=0){
-    der1[0]=1/pred[0];
+    der1[0]=0;
+    der1[1]=0;
   }else{
     if(s>=1){
-      aux1=pred[0]*pred[1];
-      aux2=exp(-aux1);
-      der1[0]=pred[1]*(pred[1]-aux2*(1+aux1))/pred[1]/pred[1]/pred[1]/(1-aux2)/
-	(1-aux2);
+      aux1=exp(-pred[0]);
+      der1[0]=(1-aux1*(1+pred[0]))/pred[1]/(1-aux1)/(1-aux1);
+      der1[1]=-pred[0]/pred[1]/pred[1]/(1-exp(-pred[0]));
     }else{
       aux1=pred[0]*pred[1]*s;
       aux2=1-(1-pred[1])*s;
       aux3=exp(-aux1/aux2);
-      der1[0]=pred[1]*s*(aux2-aux3*(1+aux1))/aux2/aux2/aux2/(1-aux3)/(1-aux3);
-      der1[0]=(isnan(der1[0]) ? 1/pred[0] : der1[0]);
+      aux4=aux2*aux2*aux2;
+      der1[0]=pred[1]*s*(aux2-aux3*(aux2+aux1))/aux4/(1-aux3)/(1-aux3);
+      der1[0]=(isnan(der1[0]) ? 0 : der1[0]);
+      der1[1]=pred[0]*s*((1-aux3)*(1-(1+pred[1])*s)-aux3*aux1*(1-s)/aux2)/
+	aux4/(1-aux3)/(1-aux3);
+      der1[1]=(isnan(der1[1]) ? 0 : der1[1]);
     }
   }
 }
 
-// FALTA 
+
 double ThetonCurePHPOC_h(vector<double> &pred, double s)
 {
   double aux1, aux2, aux3;
   
   if(s<=0)
-    return(-1);
+    return(0);
   else{
-    if(s>=1)
-      return(-1);
-    else{
-      aux1=pred[0]*pred[1];
-      aux2=aux1*s;
-      aux3=1-(1-pred[1])*s;
-      aux3=aux2/aux3/aux3/(1-exp(-aux2/aux3));
-      return((isnan(aux3) ? -1 : -1));
+    if(s>=1){
+      aux1=exp(-pred[0]);
+      aux2=(1-aux1);
+      return(-pred[0]*((2-pred[1])*aux2-pred[0]*aux1)/pred[1]/pred[1]/aux2
+	     /aux2);
+    }else{
+      aux1=pred[0]*pred[1]*s;
+      aux2=1-(1-pred[1])*s;
+      aux3=exp(-aux1/aux2);
+      aux3=-aux1*((1+(1-pred[1])*s)*(1-aux3)-aux1*aux3/aux2)/aux2/aux2/aux2
+	/(1-aux3)/(1-aux3);
+      return((isnan(aux3) ? 0 : aux3));
     }
   }
 }
@@ -1092,22 +1001,6 @@ double vthetafGF(vector<double> &pred, double s)
   }	
 }
 
-// Second derivative of gammaGF with respect to s
-double gammaD2GF(vector<double> &pred, double s)
-{
-  double aux;
-
-  if(s<=0)
-    return(0);
-  else{
-    if(s>=1)
-      return(pred[1]/pred[0]*((pred[1]+1)/pred[0]-1));
-    else{
-      aux=pred[0]-log(s);
-      return(pred[1]*pow(pred[0]/aux, pred[1])/(aux*s*s)*((pred[1]+1)/aux-1));
-    }
-  }
-}
 
 // First derivative of gammaGF with respect to pred
 void gammaGF_pred(vector<double> &pred, double s, vector<double> &der1)
@@ -1232,7 +1125,7 @@ double ThetonGF(vector<double> &pred, double s, int cc)
 			(pred[1]+1)/(pred[0]-log(s)))));
     break;
   default:
-    cerr<<"ThetonGF: Observation not censored or failure";
+    cerr<<"ThetonGF: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -1274,7 +1167,7 @@ void ThetonGF_pred(vector<double> &pred, double s, int cc,
     }
     break;
   default:
-    cerr<<"ThetonGF_pred: Observation not censored or failure";
+    cerr<<"ThetonGF_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -1309,54 +1202,11 @@ double ThetonGF_h(vector<double> &pred, double s, int cc)
     }
     break;
   default:
-    cerr<<"ThetonGF_h: Observation not censored or failure";
+    cerr<<"ThetonGF_h: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
 
-double ThetonCureGF(vector<double> &pred, double s)
-{
-  if(s<=0)
-    return(0);
-  else{
-    if(s>=1)
-      return(pred[1]/pred[0]);
-    else
-      return(pred[1]/(pred[0]-log(s)));
-  }
-}
-
-void ThetonCureGF_pred(vector<double> &pred, double s, vector<double> &der1)
-{
-  if(s<=0){
-    der1[0]=0;
-    der1[1]=1;
-  }else{
-    if(s>=1){
-      der1[0]=-pred[1]/pred[0]/pred[0];
-      der1[1]=1/pred[0];
-    }else{
-      der1[1]=1/(pred[0]-log(s));
-      der1[0]=-pred[1]*der1[1]*der1[1];
-    }
-  }
-}
-
-double ThetonCureGF_h(vector<double> &pred, double s)
-{
-  double aux;
-
-  if(s<=0)
-    return(0);
-  else{
-    if(s>=1)
-      return(-pred[1]/pred[0]/pred[0]);
-    else{
-      aux=pred[0]-log(s);
-      return(-pred[1]/aux/aux);
-    }
-  }
-}
 
 ///////////////////////////////
 //        PHPO model         //    
@@ -1384,24 +1234,6 @@ double vthetafPHPO(vector<double> &pred, double s)
   }
 }
 
-// Second derivative of gammaPHPO with respect to s
-double gammaD2PHPO(vector<double> &pred, double s)
-{
-  double aux1, aux2;
-
-  if(s<=0)
-    return(0);
-  else{
-    if(s>=1)
-      return(-pred[0]*(1-1/pred[1]));
-    else{
-      aux1=pow(s, pred[1]-2);
-      aux2=aux1*s*s*(1-pred[0]);
-      return(pred[0]*pred[1]*aux1/pow(1-aux2, 3)*
-	     (pred[1]-1+(pred[1]+1)*aux2));
-    }
-  }
-}
 
 // First derivative of gammaPHPO with respect to pred
 void gammaPHPO_pred(vector<double> &pred, double s, vector<double> &der1)
@@ -1473,7 +1305,7 @@ void gammaPHPO_2pred(vector<double> &pred, double s, vector<double> &der2)
 // s times second derivative of gammaD1PHPO with respect to pred
 void vthetafPHPO_2pred(vector<double> &pred, double s, vector<double> &der2)
 {
-  double aux1, aux2, aux3;
+  double aux1, aux2, aux3, aux4;
 
   if(s<=0){
     der2[0]=0;
@@ -1490,14 +1322,13 @@ void vthetafPHPO_2pred(vector<double> &pred, double s, vector<double> &der2)
       aux2=aux1/aux2/aux2/aux2/aux2;
       aux3=log(s);
       der2[0]=-2*pred[1]*aux2*aux1*(2-(2+pred[0])*aux1);
-      der2[1]=pred[0]*aux2*aux3*
-	(2+pred[1]*aux3*(1+(1-pred[0])*aux1)+(1-pred[0])*aux1*
-	 (1+2*pred[1]*aux3+2*pred[1]*(1-pred[0])*aux3*aux1-
-	  3*(1-pred[0])*aux1));
+      der2[1]=pred[0]*aux2*aux3;
+      aux3*=pred[1];
+      aux4=(1-pred[0])*aux1;
+      der2[1]*=(2+aux3*(1+4*aux4+aux4*aux4)-2*aux4*aux4);
       der2[1]=(isnan(der2[1]) ? 0 : der2[1]);
-      der2[2]=aux2*(1+(1-pred[1]*aux3)*aux1*
-		    (2*pred[0]-1+(1-pred[0]*pred[0])*aux1)-
-		    (1+2*pred[0])*aux1-3*pred[1]*aux3*aux1);
+      der2[2]=aux2*(1-2*aux1+(1-pred[0]*pred[0])*aux1*aux1+
+		    aux3*(1-4*pred[0]*aux1-(1-pred[0]*pred[0])*aux1*aux1));
       der2[2]=(isnan(der2[2]) ? 0 : der2[2]);
     }
   }
@@ -1525,7 +1356,7 @@ double ThetonPHPO(vector<double> &pred, double s, int cc)
     }
     break;
   default:
-    cerr<<"ThetonPHPO: Observation not censored or failure";
+    cerr<<"ThetonPHPO: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -1575,7 +1406,7 @@ void ThetonPHPO_pred(vector<double> &pred, double s, int cc,
     }
     break;
   default:
-    cerr<<"ThetonPHPO_pred: Observation not censored or failure";
+    cerr<<"ThetonPHPO_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -1611,60 +1442,9 @@ double ThetonPHPO_h(vector<double> &pred, double s, int cc)
     }
     break;
   default:
-    cerr<<"ThetonPHPO_h: Observation not censored or failure";
+    cerr<<"ThetonPHPO_h: Observation not censored or failure"<<endl;
   }
   return(ERROR);
-}
-
-double ThetonCurePHPO(vector<double> &pred, double s)
-{
-  if(s<=0)
-    return(pred[1]);
-  else{
-    if(s>=1)
-      return(pred[1]/pred[0]);
-    else
-      return(pred[1]/(1-(1-pred[0])*pow(s, pred[1])));
-  }
-}
-
-void ThetonCurePHPO_pred(vector<double> &pred, double s, vector<double> &der1)
-{
-  double aux1, aux2;
-
-  if(s<=0){
-    der1[0]=0;
-    der1[1]=1;
-  }else{
-    if(s>=1){
-      der1[1]=1/pred[0]/pred[0];
-      der1[0]=-der1[1]*pred[1];
-    }else{
-      aux1=pow(s, pred[1]);
-      aux2=1-(1-pred[0])*aux1;
-      aux2*=aux2;
-      der1[0]=-pred[1]*aux1/aux2;
-      der1[1]=(1-(1-pred[0])*aux1*(1-pred[1]*log(s)))/aux2;
-      der1[1]=(isnan(der1[1]) ? 1 : der1[1]);
-    }
-  }
-}
-
-double ThetonCurePHPO_h(vector<double> &pred, double s)
-{
-  double aux1, aux2;
-
-  if(s<=0)
-    return(0);
-  else{
-    if(s>=1)
-      return(-(1-pred[0])*pred[1]/pred[0]/pred[0]);
-    else{
-      aux1=pow(s, pred[1]);
-      aux2=1-(1-pred[0])*aux1;
-      return(pred[1]*(1-pred[0])*aux1/aux2/aux2);
-    }
-  }
 }
 
 
@@ -1731,36 +1511,6 @@ double vthetaf(vector<double> &pred, double s, int model)
   return(ERROR);
 }
 
-// Doesn't seem to be in use - was not checked
-double gammaD2(vector<double> &pred, double s, int model)
-{
-  switch(model){
-  case PH:
-    return(gammaD2PH(pred[0], s));
-    break;
-  case PHC:
-    return(gammaD2PHC(pred[0], s));
-    break;
-  case PO:
-    return(gammaD2PO(pred[0], s));
-    break;
-  case PHPHC:
-    return(gammaD2PHPHC(pred, s));
-    break;
-  case PHPOC:
-    return(gammaD2PHPOC(pred, s));
-    break;
-  case GFM:
-    return(gammaD2GF(pred, s));
-    break;
-  case PHPO:
-    return(gammaD2PHPO(pred, s));
-    break;
-  default:
-    cout<<"Not one of the supported models"<<endl;
-  }
-  return(ERROR);
-}
 
 void gamma_pred(vector<double> &pred, double s, int model, 
 		vector<double> &der1)
@@ -1891,7 +1641,7 @@ double vtheta(vector<double> &pred, double s, int cc, int model)
   case FAILURE:
     return(vthetaf(pred, s, model));
   default:
-    cerr<<"vtheta: Observation not censored or failure";
+    cerr<<"vtheta: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -1908,7 +1658,7 @@ void vtheta_pred(vector<double> &pred, double s, int cc, int model,
     vthetaf_pred(pred, s, model, der1);
     break;
   default:
-    cerr<<"vtheta_pred: Observation not censored or failure";
+    cerr<<"vtheta_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -1924,7 +1674,7 @@ void vtheta_2pred(vector<double> &pred, double s, int cc, int model,
     vthetaf_2pred(pred, s, model, der2);
     break;
   default:
-    cerr<<"vtheta_2pred: Observation not censored or failure";
+    cerr<<"vtheta_2pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -1938,7 +1688,7 @@ double vthetaCure(vector<double> &pred, double s, int cc, int model)
     return(gamma(pred, s, model)-gamma(pred, 0, model));
     break;
   default:
-    cerr<<"vthetaCure: Observation not censored or failure";
+    cerr<<"vthetaCure: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -1961,7 +1711,7 @@ void vthetaCure_pred(vector<double> &pred, double s, int cc, int model,
       der1[i]-=d1[i];
     break;
   default:
-    cerr<<"vthetaCure_pred: Observation not censored or failure";
+    cerr<<"vthetaCure_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -1983,7 +1733,7 @@ void vthetaCure_2pred(vector<double> &pred, double s, int cc, int model,
       der2[i]-=d2[i];
     break;
   default:
-    cerr<<"vthetaCure_2pred: Observation not censored or failure";
+    cerr<<"vthetaCure_2pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -2086,14 +1836,8 @@ double ThetonCure(vector<double> &pred, double s, int cc, int model)
     break;
   case FAILURE:
     switch(model){
-    case PH:
-      return(ThetonCurePH(pred[0], s));
-      break;
     case PHC:
       return(ThetonCurePHC(pred[0], s));
-      break;
-    case PO:
-      return(ThetonCurePO(pred[0], s));
       break;
     case PHPHC:
       return(ThetonCurePHPHC(pred, s));
@@ -2101,18 +1845,13 @@ double ThetonCure(vector<double> &pred, double s, int cc, int model)
     case PHPOC:
       return(ThetonCurePHPOC(pred, s));
       break;
-    case GFM:
-      return(ThetonCureGF(pred, s));
-      break;
-    case PHPO:
-      return(ThetonCurePHPO(pred, s));
-      break;
     default:
-      cerr<<"ThetonCure: Not one of the supported models"<<endl;
+      cerr<<"ThetonCure: Not one of the supported models or not a cure model"
+	  <<endl;
     }
     break;
   default:
-    cerr<<"ThetonCure: Observation not censored or failure";
+    cerr<<"ThetonCure: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }
@@ -2129,14 +1868,8 @@ void ThetonCure_pred(vector<double> &pred, double s, int cc, int model,
     break;
   case FAILURE:
     switch(model){
-    case PH:
-      der1[0]=ThetonCurePH_pred(pred[0], s);
-      break;
     case PHC:
       der1[0]=ThetonCurePHC_pred(pred[0], s);
-      break;
-    case PO:
-      der1[0]=ThetonCurePO_pred(pred[0], s);
       break;
     case PHPHC:
       ThetonCurePHPHC_pred(pred, s, der1);
@@ -2144,18 +1877,13 @@ void ThetonCure_pred(vector<double> &pred, double s, int cc, int model,
     case PHPOC:
       ThetonCurePHPOC_pred(pred, s, der1);
       break;
-    case GFM:
-      ThetonCureGF_pred(pred, s, der1);
-      break;
-    case PHPO:
-      ThetonCurePHPO_pred(pred, s, der1);
-      break;
     default:
-      cerr<<"ThetonCure_pred: Not one of the supported models"<<endl;
+      cerr<<"ThetonCure_pred: Not one of the supported models"
+	  <<"or not a cure model"<<endl;
     }
     break;
   default:
-    cerr<<"ThetonCure_pred: Observation not censored or failure";
+    cerr<<"ThetonCure_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -2167,14 +1895,8 @@ double ThetonCure_h(vector<double> &pred, double s, int cc, int model)
     break;
   case FAILURE:
     switch(model){
-    case PH:
-      return(ThetonCurePH_h(pred[0], s));
-      break;
     case PHC:
       return(ThetonCurePHC_h(pred[0], s));
-      break;
-    case PO:
-      return(ThetonCurePO_h(pred[0], s));
       break;
     case PHPHC:
       return(ThetonCurePHPHC_h(pred, s));
@@ -2182,18 +1904,13 @@ double ThetonCure_h(vector<double> &pred, double s, int cc, int model)
     case PHPOC:
       return(ThetonCurePHPOC_h(pred, s));
       break;
-    case GFM:
-      return(ThetonCureGF_h(pred, s));
-      break;
-    case PHPO:
-      return(ThetonCurePHPO_h(pred, s));
-      break;
     default:
-      cerr<<"ThetonCure_h: Not one of the supported models"<<endl;
+      cerr<<"ThetonCure_h: Not one of the supported models or not a cure model"
+	  <<endl;
     }
     break;
   default:
-    cerr<<"ThetonCure_h: Observation not censored or failure";
+    cerr<<"ThetonCure_h: Observation not censored or failure"<<endl;
   }
   return(ERROR);
 }

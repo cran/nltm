@@ -4,6 +4,8 @@
 
 using namespace std;
 
+#define VF 999 // vectorial function
+
 void printDV(ofstream *ofs, vector<double> &a)
 {
   int i;
@@ -113,5 +115,20 @@ void printDMatrixRformat(ofstream *ofs, double **a, int nrow, int ncol)
 
 }
 
+void printModelFunction(ofstream *ofs, string fName, vector<double> &pred, 
+			double s, int cc, double resU, vector<double> resVF)
+{
+  int i;
 
-
+  *ofs<<fName<<" ";
+  for(i=0; i<int(pred.size()); i++)
+    *ofs<<pred[i]<<" ";
+  *ofs<<s<<" "<<cc<<" ";
+  if(resU!=VF)
+    *ofs<<resU<<" ";
+  else{
+    for(i=0; i<int(resVF.size()); i++)
+      *ofs<<resVF[i]<<" ";
+  }
+  *ofs<<endl;
+}

@@ -1,5 +1,8 @@
 useDynLib(nltm)
 import(survival)
 export (
-	"nltm"
-	)
+        "nltm"
+	        )
+S3method(print, nltm)
+S3method(summary, nltm)
+S3method(print, summary.nltm)
