@@ -13,9 +13,9 @@
 }
 \usage{
 nltm(formula1=formula(data), formula2=formula(data),
-     data=parent.frame(), subset, na.action, init, control,
-     model=c("PH","PHC","PO","PHPHC","PHPOC","GFM","PHPO"),
-     verbose=FALSE, ...)
+     data=parent.frame(), subset, na.action, init=NULL, control,
+     nlt.model=c("PH","PHC","PO","PHPHC","PHPOC","GFM","PHPO"),
+     model=FALSE, x=FALSE, y=FALSE, verbose=FALSE, ...)
 }
 \author{
   Gilda Garibotti (garibott@math.utah.edu) and Alexander Tsodikov.
@@ -55,7 +55,7 @@ nltm(formula1=formula(data), formula2=formula(data),
     Object specifying iteration limit and other control options. Default
     is \code{nltm.control(...)}.
   }
-  \item{model}{
+  \item{nlt.model}{
     A character string specifying a non-linear transformation
     model. Default is Proportional Hazards Model.
 
@@ -89,9 +89,12 @@ nltm(formula1=formula(data), formula2=formula(data),
 	{1-(1-\theta(z))S_0^{\eta(z)}(t)}.}{S(t|z)=\theta(z) S_0^{\eta(z)}(t)/(1-(1-\theta(z))S_0^{\eta(z)}(t)).}
     }
   }
-  \item{verbose}{If TRUE it stores information from maximization of
-    likelihood and calculation of information matrix in a file. Default
-    is FALSE.}
+  \item{model}{If TRUE the model frame is stored. Default is FALSE.} 
+  \item{x}{If TRUE the model matrix is stored. Default is FALSE.} 
+  \item{y}{If TRUE the response matrix is stored. Default is FALSE.}
+  \item{verbose}{If a file name is given, it stores information from
+    maximization of likelihood and calculation of information matrix in
+    a file. Otherwise, verbose=FALSE. Default is FALSE.}
   \item{\dots}{Other arguments.}
 }
 \value{
@@ -127,7 +130,7 @@ nltm(formula1=formula(data), formula2=formula(data),
 \examples{
 # fit a Proportional Odds Model 
 data(melanoma)
-fit <- nltm(Surv(time,status) ~ size + age, data=melanoma, model="PO")
+fit <- nltm(Surv(time,status) ~ size + age, data=melanoma, nlt.model="PO")
 summary(fit)
 }
 \keyword{survival}

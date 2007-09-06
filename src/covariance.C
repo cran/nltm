@@ -51,7 +51,7 @@ void der1vthetabeta(double *x1i, double *x2i, int nvar1, int nvar2,
 		    vector<double> &predi, int statusi, double ss, int model, 
 		    int cure, int special, vector<double> &der1, int verbose)
 {  
-  int k, npred;
+  int j, k, npred;
   vector<double> d1;
 
   npred=predi.size();
@@ -140,9 +140,8 @@ void der2likBeta(double **xx1, double **xx2, vector<vector<double> > &pred,
       for(l1=0; l1<nvar1; l1++){
 	aux2=d1[l1]/vt2;
 	aux3=(aux1*xx1[i][l1]+d1[l1])/vt;
-	for(l2=l1; l2<nvar1; l2++){
+	for(l2=l1; l2<nvar1; l2++)
 	  der2[l1][l2]+=-aux2*d1[l2]+aux3*xx1[i][l2];
-	}
 	if(cure)
 	  der2[l1][nbeta-1]+=-aux2*d1[nbeta-1]+aux3;
       }
@@ -180,6 +179,7 @@ void der2likBeta(double **xx1, double **xx2, vector<vector<double> > &pred,
     }
   }
 
+//   ofsDebug<<"##################### cure terms #####################"<<endl;
   if(cure){
     for(j=0; j<rr[nt-1]; j++){
       vt=vthetaCure(pred[i], ss[nt-2], status[i], model);
@@ -198,7 +198,6 @@ void der2likBeta(double **xx1, double **xx2, vector<vector<double> > &pred,
       if(verbose)
 	printModelFunction(&ofsDebug, "vthetaCure_2pred", pred[i], ss[nt-2], 
 			   status[i], VF, d2);
-
 
       // derivative with respect to beta_k1, beta_k2 both contributing
       // to predictor theta, includes derivatives with respect to cure
@@ -260,7 +259,7 @@ void der2likBetah(double **xx1, double **xx2, int nvar1, int nvar2,
 		  vector<double> &ss, int model, int cure,
 		  vector<vector<double> > &der2, int verbose)
 {
-  int i, j, k, l, nt, nn, npred, nbeta;
+  int i, j, k, l, n1, nt, nn, npred, nbeta;
   vector<double> d1;
 
   nt=ss.size();

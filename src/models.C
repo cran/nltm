@@ -18,6 +18,7 @@ using namespace std;
 #define ERROR -1
 #define BIG 100
 
+extern ofstream ofsDebug;
 
 void printDV(ofstream *ofs, vector<double> &a);
 // s: cumulative survival function
@@ -33,10 +34,15 @@ void printDV(ofstream *ofs, vector<double> &a);
 // failure observations. vtheta for failure is gammaD1*s so it is
 // better to define it, similarly for the derivatives
 
+// gammaD2 doesn't seem to be in use - was not checked
+
 #define gammaPH(pred, s)(s<=0 ? 0 : (s>=1 ? 1 : pow(s, pred)))
 #define vthetafPH(pred,s)(s<=0 ? 0 : (s>=1 ? pred : pred*pow(s, pred)))
+#define gammaD2PH(pred, s)(s<=0 ? 0 : (s>=1 ? pred*(pred-1) : pred*(pred-1)*pow(s, pred-2)))
+
 #define gammaPHC(pred, s)(s<=0 ? exp(-pred) : (s>=1 ? 1 : exp(-pred*(1-s))))
 #define vthetafPHC(pred, s)(s<=0 ? 0 : (s>=1 ? pred : pred*exp(-pred*(1-s))*s))
+#define gammaD2PHC(pred, s)(s<=0 ? pred*pred*exp(-pred) : (s>=1 ? pred*pred : pred*pred*exp(-pred*(1-s))))
 #define gammaPHC_pred(pred, s)(s<=0 ? -exp(-pred) : (s>=1 ? 0 : -exp(-pred*(1-s))*(1-s)))
 #define vthetafPHC_pred(pred, s)(s<=0 ? 0 : (s>=1 ? 1 : (1-pred*(1-s))*exp(-pred*(1-s))*s))
 #define gammaPHC_2pred(pred, s)(s<=0 ? exp(-pred) : (s>=1 ? 0 : (1-s)*(1-s)*exp(-pred*(1-s))))
@@ -271,6 +277,22 @@ double vthetafPO(double pred, double s)
   }
 }
 
+// Second derivative of gammaPO with respect to s
+double gammaD2PO(double pred, double s)
+{
+  double aux;
+
+  if(s<=0)
+    return(0);
+  else{
+    if(s>=1)
+      return((pred-2)/(pred*pred));
+    else{
+      aux=pred-log(s);
+      return(-pred*(aux-2)/(s*s*aux*aux*aux));
+    }
+  }
+}
 
 // First derivative of gammaPO with respect to pred
 double gammaPO_pred(double pred, double s)
@@ -416,6 +438,23 @@ double vthetafPHPHC(vector<double> &pred, double s)
   }
 }
 
+double gammaD2PHPHC(vector<double> &pred, double s)
+{
+  double aux1, aux2, prod;
+
+  if(s<=0)
+    return(0);
+  else{
+    prod=pred[0]*pred[1];
+    if(s>=1)
+      return(prod*(prod+pred[1]-1));
+    else{
+      aux1=pow(s, pred[1]-2);
+      aux2=aux1*s;
+      return(exp(-pred[0]*(1-aux2*s))*prod*(prod*aux2*aux2+(pred[1]-1)*aux1));
+    }
+  }
+}
 
 // First derivative of gammaPHPHC with respect to pred
 void gammaPHPHC_pred(vector<double> &pred, double s, vector<double> &der1)
@@ -688,6 +727,22 @@ double vthetafPHPOC(vector<double> &pred, double s)
   }
 }
 
+double gammaD2PHPOC(vector<double> &pred, double s)
+{
+  double aux, prod=pred[0]*pred[1];
+
+  if(s<=0)
+    return(exp(-pred[0])*prod*prod+2*prod*(1-pred[1]));
+  else{
+    if(s>=1)
+      return(prod*prod+2*prod*pred[1]*(1-pred[1]));
+    else{
+      aux=1-(1-pred[1])*s;
+      return(exp(-pred[0]*(1-s)/aux)*prod/pow(aux, 4)*
+	     (prod+2*(1-pred[1])-2*(1-pred[1])*(1-pred[1])*s));
+    }
+  }
+}
 
 // First derivative of gammaPHPOC with respect to pred
 void gammaPHPOC_pred(vector<double> &pred, double s, vector<double> &der1)
@@ -1001,6 +1056,22 @@ double vthetafGF(vector<double> &pred, double s)
   }	
 }
 
+// Second derivative of gammaGF with respect to s
+double gammaD2GF(vector<double> &pred, double s)
+{
+  double aux;
+
+  if(s<=0)
+    return(0);
+  else{
+    if(s>=1)
+      return(pred[1]/pred[0]*((pred[1]+1)/pred[0]-1));
+    else{
+      aux=pred[0]-log(s);
+      return(pred[1]*pow(pred[0]/aux, pred[1])/(aux*s*s)*((pred[1]+1)/aux-1));
+    }
+  }
+}
 
 // First derivative of gammaGF with respect to pred
 void gammaGF_pred(vector<double> &pred, double s, vector<double> &der1)
@@ -1234,6 +1305,24 @@ double vthetafPHPO(vector<double> &pred, double s)
   }
 }
 
+// Second derivative of gammaPHPO with respect to s
+double gammaD2PHPO(vector<double> &pred, double s)
+{
+  double aux1, aux2;
+
+  if(s<=0)
+    return(0);
+  else{
+    if(s>=1)
+      return(-pred[0]*(1-1/pred[1]));
+    else{
+      aux1=pow(s, pred[1]-2);
+      aux2=aux1*s*s*(1-pred[0]);
+      return(pred[0]*pred[1]*aux1/pow(1-aux2, 3)*
+	     (pred[1]-1+(pred[1]+1)*aux2));
+    }
+  }
+}
 
 // First derivative of gammaPHPO with respect to pred
 void gammaPHPO_pred(vector<double> &pred, double s, vector<double> &der1)
@@ -1511,6 +1600,36 @@ double vthetaf(vector<double> &pred, double s, int model)
   return(ERROR);
 }
 
+// Doesn't seem to be in use - was not checked
+double gammaD2(vector<double> &pred, double s, int model)
+{
+  switch(model){
+  case PH:
+    return(gammaD2PH(pred[0], s));
+    break;
+  case PHC:
+    return(gammaD2PHC(pred[0], s));
+    break;
+  case PO:
+    return(gammaD2PO(pred[0], s));
+    break;
+  case PHPHC:
+    return(gammaD2PHPHC(pred, s));
+    break;
+  case PHPOC:
+    return(gammaD2PHPOC(pred, s));
+    break;
+  case GFM:
+    return(gammaD2GF(pred, s));
+    break;
+  case PHPO:
+    return(gammaD2PHPO(pred, s));
+    break;
+  default:
+    cout<<"Not one of the supported models"<<endl;
+  }
+  return(ERROR);
+}
 
 void gamma_pred(vector<double> &pred, double s, int model, 
 		vector<double> &der1)

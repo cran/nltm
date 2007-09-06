@@ -14,7 +14,7 @@
 \usage{
 nltm.fit(x1, x2, y, model, init, control, verbose)
 profileLikR(beta, x1, x2, status, count, s0, model, cure, tol, nvar1,
-            nvar2, npred, verbose)
+nvar2, nobs, npred, verbose)
 boundary(x1, x2, npred, cure, bscale)
 counts(time, status)
 eventTimes(y)

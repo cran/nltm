@@ -57,10 +57,10 @@ nltm.control(fnscale=-1, maxit=1000, reltol, factr=1e7, pgtol=0,
 
     Different values of bscale are allowed for different parameters. If
     different values of bscale are provided, the vector needs to have the
-    scale for the regression parameters of the first predictor,
-    \eqn{\beta_\theta}, followed by the scale for \eqn{\beta_\eta}, if
-    available and the one for the cure parameter, \eqn{\beta_c}, last if
-    a cure model. 
+    scale for the regression parameters of the long-term predictor,
+    \eqn{\beta_\theta}, followed by the scale for the short-term
+    predictor, \eqn{\beta_\eta}, if available and the one for the cure
+    parameter, \eqn{\beta_c}, last if a cure model. 
 
     Default is 5.
   }

@@ -20,8 +20,8 @@
       \eqn{\beta_c}). See \code{\link{nltm}}.
     }
     \item{loglik}{
-      A vector of length 2 containing the log-likelihood with the initial
-      values and with the final values of the coefficients.
+      A vector of length 2 containing the log-likelihood of the null
+      model and with the final values of the coefficients.
     }
     \item{surv}{
       MLE of the baseline survival function at the profile maximum
@@ -63,16 +63,36 @@
     \item{formula}{
       If the model has only one predictor a single formula indicating the
       model for that predictor. If the model has two predictors, then
-      formula is a list with terms predictor1 and predictor2 indicating
+      formula is a list with terms pred.long and pred.short indicating
       the model for the long and short term predictor respectively. 
     }
-    \item{call}{
-      The call of the nltm model.
+    \item{terms}{The 'terms' object used.}
+    \item{nvar}{
+      If the model has one predictor, number of columns in the model
+      matrix. If it has 2 predictors list with terms pred.short and
+      pred.long indicating the number of columns in the model matrix of
+      the longa and short term predictors respectively.
     }
+    \item{x}{If requested is the model matrix in the case of nlt
+      models with one predictor. If the nltm has 2 predictors, x is a
+      list with terms pred.long and pred short containing the model
+      matrix for the long and short-term predictors respectively.
+    }
+    \item{y}{If requested, the response matrix.}
+    \item{model}{If requested is the model frame in the case of nlt
+      models with one predictor. If the nltm has 2 predictors, is a
+      list with terms pred.long and pred short containing the model
+      frame for the long and short-term predictors respectively.
+    }
+    \item{npred}{Number or predictors.}
+    \item{call}{The call of the nltm model.}
     \item{na.action}{
       The \code{na.action} attribute, if any, that was returned by the
       \code{na.action} routine.
     }
+    The object will also contain the following, for documentation see the {lm}
+object: \code{terms}, \code{assign}, \code{formula}, \code{call}, and, optionally, \code{x}, \code{y},
+and/or \code{frame}.
   }
 }
 \references{

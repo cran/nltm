@@ -19,6 +19,7 @@ double **dmat(double *array, int nrow, int ncol)
       cerr<<"ERROR: malloc failed."<<endl;
       exit(1);
     }
+  //  pointer = (double **) malloc(nrow, sizeof(double *));
   for (i=0; i<nrow; i++) {
     pointer[i] = array;
     array += ncol;

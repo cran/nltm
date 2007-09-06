@@ -37,7 +37,7 @@ void predictor(double **xx1, double **xx2, int nvar1, int nvar2, double *beta,
 	       int cure, vector<vector<double> > &pred)
 {
   int i, j, icure=nvar1+nvar2;
-
+ 
   for(i=0; i<int(pred.size()); i++){
     pred[i][0]=0;
     for(j=0; j<nvar1; j++)
@@ -56,10 +56,9 @@ void predictor(double **xx1, double **xx2, int nvar1, int nvar2, double *beta,
 }
 
 
-
 // s0=exp(-h)
 void survivalJump(int *status, int *dd, int *rr, vector<vector<double> > &pred,
-		  int model, int cure, vector<double> &s0)
+		  int model, int cure, vector<double> &s0, int verbose)
 {
   int i=0, j, k, nn=pred.size(), nt=s0.size();
   double ss=1, sum=0;
@@ -78,7 +77,6 @@ void survivalJump(int *status, int *dd, int *rr, vector<vector<double> > &pred,
       i++;
     }
   }
-
   
   i=nn-1;
   if(cure){
@@ -130,10 +128,12 @@ void checkSelfConsistency(int *status, int *dd, int *rr,
   }
 }
 
+
 // Find hh satisfying the self-consistency equation, return exp(-hh) 
 // Function FitFfixedP in [SP] 
 void fitSurvival(int *status, int *dd, int *rr, vector<vector<double> > &pred, 
-		 int model, int cure, double tol, double *s0, int nt)
+		 int model, int cure, double tol, double *s0, int nt, 
+		 int verbose)
 {
   int i, j;
   double sum=2*tol;
@@ -145,7 +145,7 @@ void fitSurvival(int *status, int *dd, int *rr, vector<vector<double> > &pred,
 
   for(i=0; i<ITMAX & sum>tol; i++){ // Some warning should come if i==ITMAX
     sum=0;
-    survivalJump(status, dd, rr, pred, model, cure, s0Aux);
+    survivalJump(status, dd, rr, pred, model, cure, s0Aux, verbose);
 
     for(j=0; j<nt; j++)
       sum+=fabs(s0Aux[j]-s0[j]);
@@ -156,8 +156,7 @@ void fitSurvival(int *status, int *dd, int *rr, vector<vector<double> > &pred,
 }
 
 
-
-// likelihood
+// log likelihood
 double likelihood(int *status, int *dd, int *rr, int model, int cure, 
 		  double *s0, vector<vector<double> > &pred, int nt)
 {
@@ -184,6 +183,7 @@ double likelihood(int *status, int *dd, int *rr, int model, int cure,
   return(lik);
 }
 
+
 // randon number generator that works both in Windows and Unix
 double jrnd(void) 
 {
@@ -191,8 +191,9 @@ double jrnd(void)
   return(rv);
 }
 
-// x1: covariates matrix for predictor 1 (long term)
-// x2: covariates matrix for predictor 2 (short term)
+
+// x1: covariates matrix for long term predictor
+// x2: covariates matrix for short term predictor
 // nvar: number of variables once categorical variables have been dichotomized
 extern "C" {
 // profile likelihood
@@ -210,17 +211,21 @@ void profileLik(double *beta, double *x1, double *x2, int *status, int *dd,
   nn=*nobs;
   model=nmodel(*survModel);
 
-  xx1=dmat(x1, nn, *nvar1);
-  if(*npred>1)
+  if(*nvar1>0)
+    xx1=dmat(x1, nn, *nvar1);
+  if(*npred>1 && *nvar2>0)
     xx2=dmat(x2, nn, *nvar2);
 
   if(verbose){
     ofsDebug<<"nn: "<<nn<<" nvar1: "<<*nvar1<<" nvar2: "<<*nvar2<<endl;
     ofsDebug<<"beta "<<nbeta<<endl;
     printDVector(&ofsDebug, beta, nbeta);
-    ofsDebug<<"xx1"<<endl;
-    printDMatrix(&ofsDebug, xx1, nn, *nvar1);
-    if(*npred>1){
+    
+    if(*nvar1>0){
+      ofsDebug<<"xx1"<<endl;
+      printDMatrix(&ofsDebug, xx1, nn, *nvar1);
+    }
+    if(*npred>1 && *nvar2>0){
       ofsDebug<<"xx2"<<endl;
       printDMatrix(&ofsDebug, xx2, nn, *nvar2);
     }
@@ -240,14 +245,7 @@ void profileLik(double *beta, double *x1, double *x2, int *status, int *dd,
     pred[i].resize(*npred);
   predictor(xx1, xx2, *nvar1, *nvar2, beta, *cure, pred);
   
-  if(verbose){
-    ofsDebug<<"pred"<<endl;
-    printDM(&ofsDebug, pred);
-    ofsDebug<<"s0"<<endl;
-    printDVector(&ofsDebug, s0, nt);
-  }
-
-  fitSurvival(status, dd, rr, pred, model, *cure, *tol, s0, nt);
+  fitSurvival(status, dd, rr, pred, model, *cure, *tol, s0, nt, *verbose);
 
   if(verbose){
     ofsDebug<<"s0 ";
@@ -259,7 +257,7 @@ void profileLik(double *beta, double *x1, double *x2, int *status, int *dd,
   if(verbose)
     ofsDebug<<"plik: "<<*plik<<endl;
 
-  // Note: drand48 doens't work in Windows  
+// Note: drand48 doens't work in Windows  
 //   *plik=(isinf(*plik) || isnan(*plik) ? -VERYBIG*(1+drand48()*0.1) : *plik);
   *plik=(isinf(*plik) || isnan(*plik) ? -VERYBIG*(1+jrnd()*0.1) : *plik);
 
@@ -268,14 +266,11 @@ void profileLik(double *beta, double *x1, double *x2, int *status, int *dd,
 }
 }
 
+
 extern "C" {
-void openDebug(char **survModel)
+void openDebug(char **fileDebug)
 {
-  string fileDebug;
-    
-  fileDebug=*survModel;
-  fileDebug="debugNLTM"+fileDebug;
-  ofsDebug.open(fileDebug.c_str());
+  ofsDebug.open(*fileDebug);
   if(!ofsDebug) {
     cerr<<"ERROR: couldn't create debug file."<<endl;
     exit(1);
@@ -283,6 +278,7 @@ void openDebug(char **survModel)
   ofsDebug<<"start"<<endl;
 }
 }
+
 
 extern "C" {
 void closeDebug()
