@@ -74,7 +74,8 @@ nltm.fit <- function(x1, x2, y, model, init, control, verbose)
     bound <- boundary(x1, x2, npred, cure, control$bscale)
     
     fit <- optim(par=init, fn=profileLikR, gr=NULL, method="L-BFGS-B",
-                 lower=-bound, upper=bound, control=control,
+                 lower=-bound, upper=bound,
+                 control=control[-match(c("bscale","s0.tol"),names(control))],
                  hessian=FALSE, x1, x2, status, count, s0, model, cure,
                  control$s0.tol, nvar1, nvar2, as.integer(n-nc.small+1), npred,
                  verbose)

@@ -18,7 +18,7 @@ nltm(formula1=formula(data), formula2=formula(data),
      model=FALSE, x=FALSE, y=FALSE, verbose=FALSE, ...)
 }
 \author{
-  Gilda Garibotti (garibott@math.utah.edu) and Alexander Tsodikov.
+  Gilda Garibotti (garibotti@crub.uncoma.edu.ar) and Alexander Tsodikov.
 }
 \arguments{
   \item{formula1}{

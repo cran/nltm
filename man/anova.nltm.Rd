@@ -47,16 +47,16 @@
   valid if they are fitted to the same dataset. This may be a problem if
   there are missing values.}
 \seealso{
-  \code{\link{nltm}}, \code{\link{anova}}.
+  \code{\link{nltm}}, \code{anova}.
 }
 \examples{
 data(melanoma)
 fit1 <- nltm(formula1=Surv(time,status) ~ size + stage, 
-formula2=Surv(time,status) ~ size, data=melanoma, nlt.model="PHPH")
+formula2=Surv(time,status) ~ size, data=melanoma, nlt.model="PHPHC")
 anova(fit1)
 anova(fit1,test=TRUE)
 fit2 <- nltm(formula1=Surv(time,status) ~ size + stage + age, 
-formula2=Surv(time,status) ~ size + age, data=melanoma, nlt.model="PHPH")
+formula2=Surv(time,status) ~ size + age, data=melanoma, nlt.model="PHPHC")
 anova(fit1,fit2,test=TRUE)
  }
 \keyword{survival}

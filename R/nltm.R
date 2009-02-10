@@ -7,7 +7,13 @@ nltm <- function(formula1=formula(data), formula2=formula(data),
                             "GFM","PHPO"),
                  model=FALSE, x=FALSE, y=FALSE, verbose=FALSE, ...)
 {
-  nlt.model <- match.arg(nlt.model)
+  if(sys.parent()==0)
+    cat(gettextf("Authors: G. Garibotti, A. Tsodikov\n"))
+  if(!nlt.model %in% eval(formals()[["nlt.model"]]))
+    stop(gettextf("nlt.model should be one of %s",
+                  paste(dQuote(eval(formals()[["nlt.model"]])),collapse=", ")),
+         domain=NA)
+
   call <- match.call()
   m <- match.call(expand=FALSE)
   # this is necessary because otherwise eval(m, parent.frame()) doesn't work
