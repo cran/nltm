@@ -259,7 +259,8 @@ void profileLik(double *beta, double *x1, double *x2, int *status, int *dd,
 
 // Note: drand48 doens't work in Windows  
 //   *plik=(isinf(*plik) || isnan(*plik) ? -VERYBIG*(1+drand48()*0.1) : *plik);
-  *plik=(isinf(*plik) || isnan(*plik) ? -VERYBIG*(1+jrnd()*0.1) : *plik);
+//  *plik=(isinf(*plik) || isnan(*plik) ? -VERYBIG*(1+jrnd()*0.1) : *plik);
+  *plik = !R_FINITE(*plik) ? -VERYBIG*(1+jrnd()*0.1) : *plik;
 
   if(verbose)
     ofsDebug<<"plik: "<<*plik<<endl;
