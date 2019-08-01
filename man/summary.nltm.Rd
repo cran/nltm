@@ -37,5 +37,10 @@
 \seealso{
   \code{\link{nltm}}, \code{\link{nltm.object}}, \code{\link{summary}}.
 }
+\examples{
+# fit a Proportional Odds Model 
+data(melanoma, package="nltm")
+fit <- nltm(Surv(time,status) ~ size + age, data=melanoma, nlt.model="PO")
+summary(fit)
+}
 \keyword{survival}
-

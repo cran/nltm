@@ -18,7 +18,7 @@ update.nltm.formula <- function(fit,form,pred)
 
 anova.nltm <- function(object, ..., test=FALSE)
 {
-  cat(gettextf("Authors: G. Garibotti, A. Tsodikov\n"))
+  ## message(gettextf("Authors: G. Garibotti, A. Tsodikov"))
   dotargs <- list(...)
   named <- if (is.null(names(dotargs))) 
     rep(FALSE, length(dotargs))

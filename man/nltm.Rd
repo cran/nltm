@@ -129,9 +129,8 @@ nltm(formula1=formula(data), formula2=formula(data),
 }
 \examples{
 # fit a Proportional Odds Model 
-data(melanoma)
+data(melanoma, package="nltm")
 fit <- nltm(Surv(time,status) ~ size + age, data=melanoma, nlt.model="PO")
 summary(fit)
 }
 \keyword{survival}
-

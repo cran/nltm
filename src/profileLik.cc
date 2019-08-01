@@ -1,11 +1,10 @@
 #include <math.h>
 #include <string>
 #include <vector>
-#include <iostream>
-#include <fstream>
 #include <R.h>
+#include <Rmath.h>
 #include <stdlib.h>
-
+#include "Rostream.h"
 
 using namespace std;
 
@@ -21,15 +20,13 @@ double Theton(vector<double> &pred, double x, int cc, int model);
 double ThetonCure(vector<double> &pred, double s, int cc, int model);
 double vtheta(vector<double> &pred, double x, int cc, int model);
 double vthetaCure(vector<double> &pred, double s, int cc, int model);
-void printDV(ofstream *ofs, vector<double> &a);
-void printDM(ofstream *ofs, vector<vector<double> > &a);
-void printDVector(ofstream *ofs, double *a, int n);
-void printDMatrix(ofstream *ofs, double **a, int nrow, int ncol);
-void printIVector(ofstream *ofs, int *a, int n);
+void printDV(vector<double> &a);
+void printDM(vector<vector<double> > &a);
+void printDVector(double *a, int n);
+void printDMatrix(double **a, int nrow, int ncol);
+void printIVector(int *a, int n);
 double **dmat(double *array, int nrow, int ncol);
 int nmodel(string model);
-
-ofstream ofsDebug;
 
 // pred: nn x npred
 // beta=(beta_theta, beta_eta, beta_cure)
@@ -143,7 +140,7 @@ void fitSurvival(int *status, int *dd, int *rr, vector<vector<double> > &pred,
   for(j=0; j<nt; j++)
     s0Aux[j]=s0[j];
 
-  for(i=0; i<ITMAX & sum>tol; i++){ // Some warning should come if i==ITMAX
+  for(i=0; i<ITMAX && sum>tol; i++){ // Some warning should come if i==ITMAX
     sum=0;
     survivalJump(status, dd, rr, pred, model, cure, s0Aux, verbose);
 
@@ -184,14 +181,6 @@ double likelihood(int *status, int *dd, int *rr, int model, int cure,
 }
 
 
-// randon number generator that works both in Windows and Unix
-double jrnd(void) 
-{
-  double rv = ((double) rand())/RAND_MAX;
-  return(rv);
-}
-
-
 // x1: covariates matrix for long term predictor
 // x2: covariates matrix for short term predictor
 // nvar: number of variables once categorical variables have been dichotomized
@@ -216,28 +205,28 @@ void profileLik(double *beta, double *x1, double *x2, int *status, int *dd,
   if(*npred>1 && *nvar2>0)
     xx2=dmat(x2, nn, *nvar2);
 
-  if(verbose){
-    ofsDebug<<"nn: "<<nn<<" nvar1: "<<*nvar1<<" nvar2: "<<*nvar2<<endl;
-    ofsDebug<<"beta "<<nbeta<<endl;
-    printDVector(&ofsDebug, beta, nbeta);
+  if(*verbose){
+    Rcout<<"nn: "<<nn<<" nvar1: "<<*nvar1<<" nvar2: "<<*nvar2<<endl;
+    Rcout<<"beta "<<nbeta<<endl;
+    printDVector(beta, nbeta);
     
     if(*nvar1>0){
-      ofsDebug<<"xx1"<<endl;
-      printDMatrix(&ofsDebug, xx1, nn, *nvar1);
+      Rcout<<"xx1"<<endl;
+      printDMatrix(xx1, nn, *nvar1);
     }
     if(*npred>1 && *nvar2>0){
-      ofsDebug<<"xx2"<<endl;
-      printDMatrix(&ofsDebug, xx2, nn, *nvar2);
+      Rcout<<"xx2"<<endl;
+      printDMatrix(xx2, nn, *nvar2);
     }
-    ofsDebug<<"dd"<<endl;
-    printIVector(&ofsDebug, dd, nt);
-    ofsDebug<<"rr"<<endl;
-    printIVector(&ofsDebug, rr, nt);
-    ofsDebug<<"status"<<endl;
-    printIVector(&ofsDebug, status, nt);
+    Rcout<<"dd"<<endl;
+    printIVector(dd, nt);
+    Rcout<<"rr"<<endl;
+    printIVector(rr, nt);
+    Rcout<<"status"<<endl;
+    printIVector(status, nt);
     
-    ofsDebug<<"s0"<<endl;
-    printDVector(&ofsDebug, s0, nt);
+    Rcout<<"s0"<<endl;
+    printDVector(s0, nt);
   }
     
   pred.resize(nn);
@@ -247,43 +236,19 @@ void profileLik(double *beta, double *x1, double *x2, int *status, int *dd,
   
   fitSurvival(status, dd, rr, pred, model, *cure, *tol, s0, nt, *verbose);
 
-  if(verbose){
-    ofsDebug<<"s0 ";
-    printDVector(&ofsDebug, s0, nt);
+  if(*verbose){
+    Rcout<<"s0 ";
+    printDVector(s0, nt);
   }
   
   *plik=likelihood(status, dd, rr, model, *cure, s0, pred, nt);
     
-  if(verbose)
-    ofsDebug<<"plik: "<<*plik<<endl;
+  if(*verbose)
+    Rcout<<"plik: "<<*plik<<endl;
 
-// Note: drand48 doens't work in Windows  
-//   *plik=(isinf(*plik) || isnan(*plik) ? -VERYBIG*(1+drand48()*0.1) : *plik);
-//  *plik=(isinf(*plik) || isnan(*plik) ? -VERYBIG*(1+jrnd()*0.1) : *plik);
-  *plik = !R_FINITE(*plik) ? -VERYBIG*(1+jrnd()*0.1) : *plik;
+  *plik = !R_FINITE(*plik) ? -VERYBIG*(1+runif(0.0,1.0)*0.1) : *plik;
 
-  if(verbose)
-    ofsDebug<<"plik: "<<*plik<<endl;
-}
-}
-
-
-extern "C" {
-void openDebug(char **fileDebug)
-{
-  ofsDebug.open(*fileDebug);
-  if(!ofsDebug) {
-    cerr<<"ERROR: couldn't create debug file."<<endl;
-    exit(1);
-  }
-  ofsDebug<<"start"<<endl;
-}
-}
-
-
-extern "C" {
-void closeDebug()
-{
-  ofsDebug.close();
+  if(*verbose)
+    Rcout<<"plik: "<<*plik<<endl;
 }
 }

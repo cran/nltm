@@ -92,14 +92,14 @@ nltm.fit <- function(x1, x2, y, model, init, control, verbose)
     # Find survival function at betaMLE
     survMLE <- .C("profileLik", coef=as.double(coef), t(x1), t(x2),
                   as.integer(status), count$dd, count$rr, surv=as.double(s0),
-                  model, as.integer(cure), control$s0.tol, nvar1, nvar2,
+                  model, as.integer(cure), control$s0.tol, as.integer(nvar1), as.integer(nvar2),
                   nrow(count), as.integer(n-nc.small+1), as.integer(npred),
                   as.integer(verbose), plik=double(1), PACKAGE="nltm")$surv
   
     # Find covariance matrix
     imat1 <- .C("informationMatrix", coef, t(x1), t(x2), as.integer(status),
-                count$dd, count$rr, survMLE, model, as.integer(cure), nvar1,
-                nvar2, nrow(count), as.integer(n-nc.small+1),
+                count$dd, count$rr, survMLE, model, as.integer(cure), as.integer(nvar1),
+                as.integer(nvar2), nrow(count), as.integer(n-nc.small+1),
                 as.integer(npred), as.integer(verbose),
                 imat=double(nbeta*nbeta), PACKAGE="nltm")$imat
 
@@ -116,7 +116,7 @@ nltm.fit <- function(x1, x2, y, model, init, control, verbose)
   init <- rep(0,nbeta)
   lik0 <- .C("profileLik", coef=as.double(init), t(x1), t(x2),
              as.integer(status), count$dd, count$rr, surv=as.double(s0),
-             model, as.integer(cure), control$s0.tol, nvar1, nvar2,
+             model, as.integer(cure), control$s0.tol, as.integer(nvar1), as.integer(nvar2),
              nrow(count), as.integer(n-nc.small+1), as.integer(npred),
              as.integer(verbose), plik=double(1), PACKAGE="nltm")$plik
 
@@ -224,7 +224,7 @@ profileLikR <- function(beta, x1, x2, status, count, s0, model, cure, tol,
   # by columns and I need it by rows because of dmat
   res <- .C("profileLik", coef=as.double(beta), t(x1), t(x2),
             as.integer(status), count$dd, count$rr, surv=as.double(s0), model,
-            as.integer(cure), tol, nvar1, nvar2, nrow(count), nobs,
+            as.integer(cure), tol, as.integer(nvar1), as.integer(nvar2), nrow(count), nobs,
             as.integer(npred), as.integer(verbose), plik=double(1),
             PACKAGE="nltm")$plik 
 

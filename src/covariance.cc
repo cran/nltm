@@ -1,9 +1,8 @@
-#include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <math.h>
 #include <R.h>
+#include "Rostream.h"
 
 using namespace std;
 
@@ -11,8 +10,6 @@ using namespace std;
 #define SPECIALN 0
 #define SPECIALY 1
 #define VF 999 // vectorial function
-
-extern ofstream ofsDebug;
 
 double vtheta(vector<double> &pred, double s, int cc, int model);
 void vtheta_pred(vector<double> &pred, double x, int cc, int model,
@@ -30,14 +27,14 @@ double Theton_h(vector<double> &pred, double s, int cc, int model);
 void ThetonCure_pred(vector<double> &pred, double s, int cc, int model,
 		     vector<double> &der1);
 double ThetonCure_h(vector<double> &pred, double s, int cc, int model);
-void printDV(ofstream *ofs, vector<double> &a); 
-void printDM(ofstream *ofs, vector<vector<double> > &a); 
-void printDVector(ofstream *ofs, double *a, int n);
-void printDMatrix(ofstream *ofs, double **a, int nrow, int ncol);
-void printIVector(ofstream *ofs, int *a, int n);
-void printDMRformat(ofstream *ofs, vector<vector<double> > &a);
-void printDMatrixRformat(ofstream *ofs, double **a, int nrow, int ncol);
-void printModelFunction(ofstream *ofs, string fName, vector<double> &pred, 
+void printDV(vector<double> &a); 
+void printDM(vector<vector<double> > &a); 
+void printDVector(double *a, int n);
+void printDMatrix(double **a, int nrow, int ncol);
+void printIVector(int *a, int n);
+void printDMRformat(vector<vector<double> > &a);
+void printDMatrixRformat(double **a, int nrow, int ncol);
+void printModelFunction(string fName, vector<double> &pred, 
 			double s, int cc, double resU, vector<double> resVF);
 void predictor(double **xx1, double **xx2, int nvar1, int nvar2, double *beta, 
 	       int cure, vector<vector<double> > &pred);
@@ -51,7 +48,7 @@ void der1vthetabeta(double *x1i, double *x2i, int nvar1, int nvar2,
 		    vector<double> &predi, int statusi, double ss, int model, 
 		    int cure, int special, vector<double> &der1, int verbose)
 {  
-  int j, k, npred;
+  int k, npred;
   vector<double> d1;
 
   npred=predi.size();
@@ -61,16 +58,16 @@ void der1vthetabeta(double *x1i, double *x2i, int nvar1, int nvar2,
   case SPECIALN:
     vtheta_pred(predi, ss, statusi, model, d1);
     if(verbose)
-      printModelFunction(&ofsDebug, "vtheta_pred", predi, ss, statusi, VF, d1);
+      printModelFunction("vtheta_pred", predi, ss, statusi, VF, d1);
     break;
   case SPECIALY:
     vthetaCure_pred(predi, ss, statusi, model, d1);
     if(verbose)
-      printModelFunction(&ofsDebug, "vthetaCure_pred", predi, ss, statusi, VF, 
+      printModelFunction("vthetaCure_pred", predi, ss, statusi, VF, 
 			 d1);
     break;
   default:
-    cerr<<"der1vthetabeta: incorrect special value "<<special<<endl;
+    Rcerr<<"der1vthetabeta: incorrect special value "<<special<<endl;
   }
 
   for(k=0; k<nvar1; k++){
@@ -96,12 +93,11 @@ void der2likBeta(double **xx1, double **xx2, vector<vector<double> > &pred,
 		 int *rr, int *status, vector<double> &ss, int model, int cure,
 		 int nvar1, int nvar2, double **der2, int verbose)
 {  
-  int i, j, k, l1, l2, npred, nn, nbeta, nt;
+  int i, j, k, l1, l2, npred, nbeta, nt;
   double vt, vt2, aux1, aux2, aux3;
   vector<double> d1, d2;
 
   nt=ss.size();
-  nn=pred.size();
   npred=pred[0].size();
   nbeta=nvar1+nvar2+cure;
   d1.resize(nbeta);
@@ -116,8 +112,8 @@ void der2likBeta(double **xx1, double **xx2, vector<vector<double> > &pred,
     for(j=0; j<rr[k]; j++){
       vt=vtheta(pred[i], ss[k], status[i], model);
       if(verbose){
-	ofsDebug<<i<<" ";
-	printModelFunction(&ofsDebug, "vtheta", pred[i], ss[k], status[i], 
+	Rcout<<i<<" ";
+	printModelFunction("vtheta", pred[i], ss[k], status[i], 
 			   vt, d1);
       }
       vt=(fabs(vt)<TINY ? (vt<0 ? -TINY : TINY) : vt);
@@ -130,7 +126,7 @@ void der2likBeta(double **xx1, double **xx2, vector<vector<double> > &pred,
 		       model, cure, SPECIALN, d1, verbose);
       vtheta_2pred(pred[i], ss[k], status[i], model, d2);
       if(verbose)
-	printModelFunction(&ofsDebug, "vtheta_2pred", pred[i], ss[k], 
+	printModelFunction("vtheta_2pred", pred[i], ss[k], 
 			   status[i], VF, d2);
 
       // derivative with respect to beta_k1, beta_k2 both contributing
@@ -179,12 +175,12 @@ void der2likBeta(double **xx1, double **xx2, vector<vector<double> > &pred,
     }
   }
 
-//   ofsDebug<<"##################### cure terms #####################"<<endl;
+//   Rcout<<"##################### cure terms #####################"<<endl;
   if(cure){
     for(j=0; j<rr[nt-1]; j++){
       vt=vthetaCure(pred[i], ss[nt-2], status[i], model);
       if(verbose)
-	printModelFunction(&ofsDebug, "vthetaCure", pred[i], ss[nt-2], 
+	printModelFunction("vthetaCure", pred[i], ss[nt-2], 
 			   status[i], vt, d1);
       vt=(fabs(vt)<TINY ? (vt<0 ? -TINY : TINY) : vt);
       vt2=vt*vt;
@@ -196,7 +192,7 @@ void der2likBeta(double **xx1, double **xx2, vector<vector<double> > &pred,
 		       model, cure, SPECIALY, d1, verbose);
       vthetaCure_2pred(pred[i], ss[nt-2], status[i], model, d2);
       if(verbose)
-	printModelFunction(&ofsDebug, "vthetaCure_2pred", pred[i], ss[nt-2], 
+	printModelFunction("vthetaCure_2pred", pred[i], ss[nt-2], 
 			   status[i], VF, d2);
 
       // derivative with respect to beta_k1, beta_k2 both contributing
@@ -259,7 +255,7 @@ void der2likBetah(double **xx1, double **xx2, int nvar1, int nvar2,
 		  vector<double> &ss, int model, int cure,
 		  vector<vector<double> > &der2, int verbose)
 {
-  int i, j, k, l, n1, nt, nn, npred, nbeta;
+  int i, j, k, l, nt, nn, npred, nbeta;
   vector<double> d1;
 
   nt=ss.size();
@@ -277,7 +273,7 @@ void der2likBetah(double **xx1, double **xx2, int nvar1, int nvar2,
     for(j=0; j<rr[nt-1]; j++){
       ThetonCure_pred(pred[i], ss[nt-2], status[i], model, d1);
       if(verbose)
-	printModelFunction(&ofsDebug, "ThetonCure_pred", pred[i], ss[nt-2], 
+	printModelFunction("ThetonCure_pred", pred[i], ss[nt-2], 
 			   status[i], VF, d1);
       for(l=0; l<nvar1; l++)
 	  der2[nt-2][l]-=d1[0]*pred[i][0]*xx1[i][l];
@@ -290,7 +286,7 @@ void der2likBetah(double **xx1, double **xx2, int nvar1, int nvar2,
     for(j=0; j<rr[nt-1]; j++){
       Theton_pred(pred[i], ss[nt-1], status[i], model, d1);
       if(verbose)
-	printModelFunction(&ofsDebug, "Theton_pred", pred[i], ss[nt-1], 
+	printModelFunction("Theton_pred", pred[i], ss[nt-1], 
 			   status[i], VF, d1);
       for(l=0; l<nvar1; l++)
 	der2[nt-1][l]-=d1[0]*pred[i][0]*xx1[i][l];
@@ -309,7 +305,7 @@ void der2likBetah(double **xx1, double **xx2, int nvar1, int nvar2,
     for(j=0; j<rr[k]; j++){
       Theton_pred(pred[i], ss[k], status[i], model, d1);
       if(verbose)
-	printModelFunction(&ofsDebug, "Theton_pred", pred[i], ss[k], status[i],
+	printModelFunction("Theton_pred", pred[i], ss[k], status[i],
 			   VF, d1);
       for(l=0; l<nvar1; l++)
 	der2[k][l]-=d1[0]*pred[i][0]*xx1[i][l];
@@ -344,8 +340,9 @@ void der1ThetonhDiag(vector<vector<double> > &pred, int *rr, int *dd,
     for(j=0; j<rr[nt-1]; j++){
       aux=ThetonCure_h(pred[i], ss[nt-2], status[i], model);
       aa[nt-2]+=aux;
-      printModelFunction(&ofsDebug, "ThetonCure_h", pred[i], ss[nt-2], 
-			 status[i], aux, aa); 
+      if (verbose)
+	printModelFunction("ThetonCure_h", pred[i], ss[nt-2], 
+			   status[i], aux, aa); 
       // aa is passed just to put something
       i--;
     }     
@@ -353,8 +350,9 @@ void der1ThetonhDiag(vector<vector<double> > &pred, int *rr, int *dd,
     for(j=0; j<rr[nt-1]; j++){
       aux=Theton_h(pred[i], ss[nt-1], status[i], model);
       aa[nt-1]+=aux;
-      printModelFunction(&ofsDebug, "Theton_h", pred[i], ss[nt-1], status[i],
-			 aux, aa);
+      if (verbose)
+	printModelFunction("Theton_h", pred[i], ss[nt-1], status[i],
+			   aux, aa);
       i--;
     }     
   }
@@ -367,8 +365,9 @@ void der1ThetonhDiag(vector<vector<double> > &pred, int *rr, int *dd,
     for(j=0; j<rr[k]; j++){
       aux=Theton_h(pred[i], ss[k], status[i], model);
       aa[k]+=aux;
-      printModelFunction(&ofsDebug, "Theton_h", pred[i], ss[k], status[i],
-			 aux, aa);
+      if (verbose)
+	printModelFunction("Theton_h", pred[i], ss[k], status[i],
+			   aux, aa);
       i--;
     }    
   }
@@ -435,7 +434,7 @@ void solveLinearSystem(vector<double> &aa, vector<double> &bb,
   if(fabs(fi0+1-fi1)>TINY)
     fiVec(fi0/(fi0+1-fi1), aa, bb, diag, x);
   else
-    cerr<<"solveLinearSystem: fi0+1-fi1=0"<<endl; 
+    Rcerr<<"solveLinearSystem: fi0+1-fi1=0"<<endl; 
 
 // This shouldn't happen, if it happens, the solution would be to
 // evaluate fiVec at other points, instead of 0 and 1
@@ -585,11 +584,11 @@ void informationMatrix(double *beta, double *x1, double *x2, int *status,
   model=nmodel(*survModel);
   nbeta=(*nvar1)+(*nvar2)+(*cure);
 
-  if(verbose){
-    ofsDebug<<"information matrix"<<endl;
-    ofsDebug<<"nn: "<<nn<<" nvar1: "<<*nvar1<<" nvar2: "<<*nvar2<<endl;
-    ofsDebug<<"beta "<<nbeta<<endl;
-    printDVector(&ofsDebug, beta, nbeta);
+  if(*verbose){
+    Rcout<<"information matrix"<<endl;
+    Rcout<<"nn: "<<nn<<" nvar1: "<<*nvar1<<" nvar2: "<<*nvar2<<endl;
+    Rcout<<"beta "<<nbeta<<endl;
+    printDVector(beta, nbeta);
   }
   xx1=dmat(x1, nn, *nvar1);
   xx2=dmat(x2, nn, *nvar2);
@@ -604,20 +603,20 @@ void informationMatrix(double *beta, double *x1, double *x2, int *status,
   ss[0]=s0[0];
   for(j=1; j<nt; j++)
     ss[j]=ss[j-1]*s0[j];
-  if(verbose){
-    ofsDebug<<"pred"<<endl;
-    printDM(&ofsDebug, pred);
-    ofsDebug<<"s0"<<endl;
-    printDVector(&ofsDebug, s0, nt);
+  if(*verbose){
+    Rcout<<"pred"<<endl;
+    printDM(pred);
+    Rcout<<"s0"<<endl;
+    printDVector(s0, nt);
   }
 
    // Partial second derivative of likelihood with respect to beta
   der2likBeta(xx1, xx2, pred, rr, status, ss, model, *cure, *nvar1, *nvar2, 
 	      infMat, *verbose);
-  if(verbose){
-    ofsDebug<<"der2likbeta start"<<endl;
-    ofsDebug<<"d2lbeta <- ";
-    printDMatrixRformat(&ofsDebug, infMat, nbeta, nbeta);
+  if(*verbose){
+    Rcout<<"der2likbeta start"<<endl;
+    Rcout<<"d2lbeta <- ";
+    printDMatrixRformat(infMat, nbeta, nbeta);
   }
 
   // Partial second derivative of likelihood with respect to beta and h
@@ -626,9 +625,9 @@ void informationMatrix(double *beta, double *x1, double *x2, int *status,
     d2likbh[i].resize(nbeta);
   der2likBetah(xx1, xx2, *nvar1, *nvar2, pred, rr, status, ss, model, *cure, 
 	       d2likbh, *verbose);
-  if(verbose){
-    ofsDebug<<"d2lbetah <- ";
-    printDMRformat(&ofsDebug, d2likbh);
+  if(*verbose){
+    Rcout<<"d2lbetah <- ";
+    printDMRformat(d2likbh);
   }
 
   // Elements for construction of partial second derivative of
@@ -639,11 +638,11 @@ void informationMatrix(double *beta, double *x1, double *x2, int *status,
   der1ThetonhDiag(pred, rr, dd, status, s0, ss, model, *cure, aa, diag, 
 		  *verbose);
   
-  if(verbose){
-    ofsDebug<<"aa"<<endl;
-    printDV(&ofsDebug, aa);
-    ofsDebug<<"diag"<<endl;
-    printDV(&ofsDebug, diag);
+  if(*verbose){
+    Rcout<<"aa"<<endl;
+    printDV(aa);
+    Rcout<<"diag"<<endl;
+    printDV(diag);
   }
 
   // First derivative of h(beta) with respect to beta
@@ -651,9 +650,9 @@ void informationMatrix(double *beta, double *x1, double *x2, int *status,
   for(i=0; i<nh; i++)
     d1hb[i].resize(nbeta);
   der1Hbeta(diag, aa, d2likbh, d1hb);
-  if(verbose){
-    ofsDebug<<"der1Hbeta <- ";
-    printDMRformat(&ofsDebug, d1hb);
+  if(*verbose){
+    Rcout<<"der1Hbeta <- ";
+    printDMRformat(d1hb);
   }
 
   // Second partial derivative of likelihood times derivative of dHb
@@ -662,9 +661,9 @@ void informationMatrix(double *beta, double *x1, double *x2, int *status,
   for(i=0; i<nbeta; i++)
     auxMat[i].resize(nbeta);
   term23(d1hb, d2likbh, auxMat);
-  if(verbose){
-    ofsDebug<<"term23 <- ";
-   printDMRformat(&ofsDebug, auxMat);
+  if(*verbose){
+    Rcout<<"term23 <- ";
+   printDMRformat(auxMat);
   }
 
   for(i=0; i<nbeta; i++)
@@ -675,9 +674,9 @@ void informationMatrix(double *beta, double *x1, double *x2, int *status,
   // derivative of likelihood with respet to h times first derivative
   // of h(beta) with respect to beta
   term4(aa, diag, d1hb, auxMat);
-  if(verbose){
-    ofsDebug<<"term4 <- ";
-    printDMRformat(&ofsDebug, auxMat);
+  if(*verbose){
+    Rcout<<"term4 <- ";
+    printDMRformat(auxMat);
   }
   for(i=0; i<nbeta; i++)
     for(j=0; j<nbeta; j++){
@@ -685,9 +684,9 @@ void informationMatrix(double *beta, double *x1, double *x2, int *status,
       infMat[i][j]*=(-1);
     }
 
-  if(verbose){
-    ofsDebug<<"infMat <- ";
-    printDMatrixRformat(&ofsDebug, infMat, nbeta, nbeta);
+  if(*verbose){
+    Rcout<<"infMat <- ";
+    printDMatrixRformat(infMat, nbeta, nbeta);
   }
 }
 } // extern "C"

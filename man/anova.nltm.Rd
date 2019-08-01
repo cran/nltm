@@ -50,13 +50,13 @@
   \code{\link{nltm}}, \code{anova}.
 }
 \examples{
-data(melanoma)
+data(melanoma, package="nltm")
 fit1 <- nltm(formula1=Surv(time,status) ~ size + stage, 
-formula2=Surv(time,status) ~ size, data=melanoma, nlt.model="PHPHC")
+             formula2=Surv(time,status) ~ size, data=melanoma, nlt.model="PHPHC")
 anova(fit1)
 anova(fit1,test=TRUE)
 fit2 <- nltm(formula1=Surv(time,status) ~ size + stage + age, 
-formula2=Surv(time,status) ~ size + age, data=melanoma, nlt.model="PHPHC")
+             formula2=Surv(time,status) ~ size + age, data=melanoma, nlt.model="PHPHC")
 anova(fit1,fit2,test=TRUE)
  }
 \keyword{survival}

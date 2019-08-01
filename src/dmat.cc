@@ -1,26 +1,14 @@
-#include <fstream>
-#include <iostream>
-#include <stdlib.h>
-
-using namespace std;
-
+#include <R.h>
 
 // array=(row1, row2, ...)
 double **dmat(double *array, int nrow, int ncol)
 {
-  register int i;
-  register double **pointer;
+  int i;
+  double **pointer;
   
-  if((pointer=(double **)malloc(sizeof(double *)*nrow))==NULL) {
-    cerr<<"ERROR: malloc failed."<<endl;
-    exit(1);
-  }
+  pointer=(double **)R_alloc(nrow+1, sizeof(double *));
   for(i=0; i<nrow; ++i)
-    if((pointer[i]=(double *)malloc(sizeof(double)*ncol))==NULL) {
-      cerr<<"ERROR: malloc failed."<<endl;
-      exit(1);
-    }
-  //  pointer = (double **) malloc(nrow, sizeof(double *));
+    pointer[i]=(double *)R_alloc(ncol+1,sizeof(double));
   for (i=0; i<nrow; i++) {
     pointer[i] = array;
     array += ncol;

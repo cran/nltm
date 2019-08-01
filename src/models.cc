@@ -1,8 +1,7 @@
 #include <string>
 #include <math.h>
 #include <vector>
-#include <iostream>
-#include <fstream>
+#include "Rostream.h"
 
 using namespace std;
 
@@ -15,12 +14,9 @@ using namespace std;
 #define PHPOC 4
 #define GFM 5
 #define PHPO 6
-#define ERROR -1
+#define ERROR_CODE -1
 #define BIG 100
 
-extern ofstream ofsDebug;
-
-void printDV(ofstream *ofs, vector<double> &a);
 // s: cumulative survival function
 
 // pred: predictor. 
@@ -120,9 +116,9 @@ double ThetonPH(double pred, double s, int cc)
     return(pred);
     break;
   default:
-    cerr<<"ThetonPH: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPH: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 double ThetonPH_pred(double pred, double s, int cc)
@@ -135,9 +131,9 @@ double ThetonPH_pred(double pred, double s, int cc)
     return(1);
     break;
   default:
-    cerr<<"ThetonPH_pred: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPH_pred: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 double ThetonPH_h(double pred, double s, int cc)
@@ -150,9 +146,9 @@ double ThetonPH_h(double pred, double s, int cc)
     return(0);
     break;
   default:
-    cerr<<"ThetonPH_h: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPH_h: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 
@@ -169,9 +165,9 @@ double ThetonPHC(double pred, double s, int cc)
     return((s<=0 ? 1 : (s>=1 ? 1+pred : 1+pred*s)));
     break;
   default:
-    cerr<<"ThetonPHC: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHC: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 double ThetonPHC_pred(double pred, double s, int cc)
@@ -184,9 +180,9 @@ double ThetonPHC_pred(double pred, double s, int cc)
     return((s<=0 ? 0 : (s>=1 ? 1 : s)));
     break;
   default:
-    cerr<<"ThetonPHC: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHC: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 double ThetonPHC_h(double pred, double s, int cc)
@@ -199,9 +195,9 @@ double ThetonPHC_h(double pred, double s, int cc)
     return((s<=0 ? 0 : (s>=1 ? -pred : -pred*s)));
     break;
   default:
-    cerr<<"ThetonPHC: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHC: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 double ThetonCurePHC(double pred, double s)
@@ -369,9 +365,9 @@ double ThetonPO(double pred, double s, int cc)
     return((s<=0 ? 0 : (s>=1 ? 2/pred : 2/(pred-log(s)))));
     break;
   default:
-    cerr<<"ThetonPO: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPO: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 // ThetonPO_h equals ThetonPO_pred
@@ -405,10 +401,9 @@ double ThetonPO_pred(double pred, double s, int cc)
     }
     break;
   default:
-    cerr<<"ThetonPO_pred and TheronPO_h: Observation not censored or failure"
-	<<endl;
+    Rcerr<<"ThetonPO_pred and TheronPO_h: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 
@@ -575,9 +570,9 @@ double ThetonPHPHC(vector<double> &pred, double s, int cc)
 			      pred[1]*(pred[0]*pow(s, pred[1])+1))));
     break;
   default:
-    cerr<<"ThetonPHPHC: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHPHC: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 void ThetonPHPHC_pred(vector<double> &pred, double s, int cc, 
@@ -619,7 +614,7 @@ void ThetonPHPHC_pred(vector<double> &pred, double s, int cc,
     }
     break;
   default:
-    cerr<<"ThetonPHPHC_pred: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHPHC_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -635,9 +630,9 @@ double ThetonPHPHC_h(vector<double> &pred, double s, int cc)
 			-pred[0]*pred[1]*pred[1]*pow(s, pred[1]))));
     break;
   default:
-    cerr<<"ThetonPHPHC_h: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHPHC_h: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 double ThetonCurePHPHC(vector<double> &pred, double s)
@@ -874,9 +869,9 @@ double ThetonPHPOC(vector<double> &pred, double s, int cc)
     }
     break;
   default:
-    cerr<<"ThetonPHPOC: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHPOC: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 void ThetonPHPOC_pred(vector<double> &pred, double s, int cc, 
@@ -920,7 +915,7 @@ void ThetonPHPOC_pred(vector<double> &pred, double s, int cc,
     }
     break;
   default:
-    cerr<<"ThetonPHPOC_pred: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHPOC_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -955,9 +950,9 @@ double ThetonPHPOC_h(vector<double> &pred, double s, int cc)
     }
     break;
   default:
-    cerr<<"ThetonPHPOC_h: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHPOC_h: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 double ThetonCurePHPOC(vector<double> &pred, double s)
@@ -1196,9 +1191,9 @@ double ThetonGF(vector<double> &pred, double s, int cc)
 			(pred[1]+1)/(pred[0]-log(s)))));
     break;
   default:
-    cerr<<"ThetonGF: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonGF: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 void ThetonGF_pred(vector<double> &pred, double s, int cc, 
@@ -1238,7 +1233,7 @@ void ThetonGF_pred(vector<double> &pred, double s, int cc,
     }
     break;
   default:
-    cerr<<"ThetonGF_pred: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonGF_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -1273,9 +1268,9 @@ double ThetonGF_h(vector<double> &pred, double s, int cc)
     }
     break;
   default:
-    cerr<<"ThetonGF_h: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonGF_h: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 
@@ -1445,9 +1440,9 @@ double ThetonPHPO(vector<double> &pred, double s, int cc)
     }
     break;
   default:
-    cerr<<"ThetonPHPO: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHPO: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 void ThetonPHPO_pred(vector<double> &pred, double s, int cc, 
@@ -1495,7 +1490,7 @@ void ThetonPHPO_pred(vector<double> &pred, double s, int cc,
     }
     break;
   default:
-    cerr<<"ThetonPHPO_pred: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHPO_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -1531,9 +1526,9 @@ double ThetonPHPO_h(vector<double> &pred, double s, int cc)
     }
     break;
   default:
-    cerr<<"ThetonPHPO_h: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonPHPO_h: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 
@@ -1565,9 +1560,9 @@ double gamma(vector<double> &pred, double s, int model)
     return(gammaPHPO(pred, s));
     break;
   default:
-    cerr<<"gamma: Not one of the supported models"<<endl;
+    Rcerr<<"gamma: Not one of the supported models"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 double vthetaf(vector<double> &pred, double s, int model)
@@ -1595,9 +1590,9 @@ double vthetaf(vector<double> &pred, double s, int model)
     return(vthetafPHPO(pred, s));
     break;
   default:
-    cerr<<"vthetaf: Not one of the supported models"<<endl;
+    Rcerr<<"vthetaf: Not one of the supported models"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 // Doesn't seem to be in use - was not checked
@@ -1626,9 +1621,9 @@ double gammaD2(vector<double> &pred, double s, int model)
     return(gammaD2PHPO(pred, s));
     break;
   default:
-    cout<<"Not one of the supported models"<<endl;
+    Rcerr<<"Not one of the supported models"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 void gamma_pred(vector<double> &pred, double s, int model, 
@@ -1657,7 +1652,7 @@ void gamma_pred(vector<double> &pred, double s, int model,
     gammaPHPO_pred(pred, s, der1);
     break;
   default:
-    cerr<<"gamma_pred: Not one of the supported models"<<endl;
+    Rcerr<<"gamma_pred: Not one of the supported models"<<endl;
   }
 }
 
@@ -1687,7 +1682,7 @@ void vthetaf_pred(vector<double> &pred, double s, int model,
     vthetafPHPO_pred(pred, s, der1);
     break;
   default:
-    cerr<<"vthetaf_pred: Not one of the supported models"<<endl;
+    Rcerr<<"vthetaf_pred: Not one of the supported models"<<endl;
   }
 }
 
@@ -1717,7 +1712,7 @@ void gamma_2pred(vector<double> &pred, double s, int model,
     gammaPHPO_2pred(pred, s, der2);
     break;
   default:
-    cerr<<"gamma_2pred: Not one of the supported models"<<endl;
+    Rcerr<<"gamma_2pred: Not one of the supported models"<<endl;
   }
 }
 
@@ -1747,7 +1742,7 @@ void vthetaf_2pred(vector<double> &pred, double s, int model,
     vthetafPHPO_2pred(pred, s, der2);
     break;
   default:
-    cerr<<"dammaD1_2pred: Not one of the supported models"<<endl;
+    Rcerr<<"dammaD1_2pred: Not one of the supported models"<<endl;
   }
 }
 
@@ -1760,9 +1755,9 @@ double vtheta(vector<double> &pred, double s, int cc, int model)
   case FAILURE:
     return(vthetaf(pred, s, model));
   default:
-    cerr<<"vtheta: Observation not censored or failure"<<endl;
+    Rcerr<<"vtheta: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 // First derivative of vtheta with respect to pred
@@ -1777,7 +1772,7 @@ void vtheta_pred(vector<double> &pred, double s, int cc, int model,
     vthetaf_pred(pred, s, model, der1);
     break;
   default:
-    cerr<<"vtheta_pred: Observation not censored or failure"<<endl;
+    Rcerr<<"vtheta_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -1793,7 +1788,7 @@ void vtheta_2pred(vector<double> &pred, double s, int cc, int model,
     vthetaf_2pred(pred, s, model, der2);
     break;
   default:
-    cerr<<"vtheta_2pred: Observation not censored or failure"<<endl;
+    Rcerr<<"vtheta_2pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -1807,9 +1802,9 @@ double vthetaCure(vector<double> &pred, double s, int cc, int model)
     return(gamma(pred, s, model)-gamma(pred, 0, model));
     break;
   default:
-    cerr<<"vthetaCure: Observation not censored or failure"<<endl;
+    Rcerr<<"vthetaCure: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 void vthetaCure_pred(vector<double> &pred, double s, int cc, int model,
@@ -1830,7 +1825,7 @@ void vthetaCure_pred(vector<double> &pred, double s, int cc, int model,
       der1[i]-=d1[i];
     break;
   default:
-    cerr<<"vthetaCure_pred: Observation not censored or failure"<<endl;
+    Rcerr<<"vthetaCure_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -1852,7 +1847,7 @@ void vthetaCure_2pred(vector<double> &pred, double s, int cc, int model,
       der2[i]-=d2[i];
     break;
   default:
-    cerr<<"vthetaCure_2pred: Observation not censored or failure"<<endl;
+    Rcerr<<"vthetaCure_2pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -1881,9 +1876,9 @@ double Theton(vector<double> &pred, double s, int cc, int model)
     return(ThetonPHPO(pred, s, cc));
   break;
   default:
-    cerr<<"Theton: Not one of the supported models"<<endl;
+    Rcerr<<"Theton: Not one of the supported models"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 void Theton_pred(vector<double> &pred, double s, int cc, int model, 
@@ -1912,7 +1907,7 @@ void Theton_pred(vector<double> &pred, double s, int cc, int model,
     ThetonPHPO_pred(pred, s, cc, der1);
     break;
   default:
-    cerr<<"Theton_pred: Not one of the supported models"<<endl;
+    Rcerr<<"Theton_pred: Not one of the supported models"<<endl;
   }
 }
 
@@ -1942,9 +1937,9 @@ double Theton_h(vector<double> &pred, double s, int cc, int model)
     return(ThetonPHPO_h(pred, s, cc));
     break;
   default:
-    cerr<<"Theton_h: Not one of the supported models"<<endl;
+    Rcerr<<"Theton_h: Not one of the supported models"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 double ThetonCure(vector<double> &pred, double s, int cc, int model)
@@ -1965,14 +1960,14 @@ double ThetonCure(vector<double> &pred, double s, int cc, int model)
       return(ThetonCurePHPOC(pred, s));
       break;
     default:
-      cerr<<"ThetonCure: Not one of the supported models or not a cure model"
+      Rcerr<<"ThetonCure: Not one of the supported models or not a cure model"
 	  <<endl;
     }
     break;
   default:
-    cerr<<"ThetonCure: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonCure: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 void ThetonCure_pred(vector<double> &pred, double s, int cc, int model,
@@ -1997,12 +1992,12 @@ void ThetonCure_pred(vector<double> &pred, double s, int cc, int model,
       ThetonCurePHPOC_pred(pred, s, der1);
       break;
     default:
-      cerr<<"ThetonCure_pred: Not one of the supported models"
+      Rcerr<<"ThetonCure_pred: Not one of the supported models"
 	  <<"or not a cure model"<<endl;
     }
     break;
   default:
-    cerr<<"ThetonCure_pred: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonCure_pred: Observation not censored or failure"<<endl;
   }
 }
 
@@ -2024,14 +2019,14 @@ double ThetonCure_h(vector<double> &pred, double s, int cc, int model)
       return(ThetonCurePHPOC_h(pred, s));
       break;
     default:
-      cerr<<"ThetonCure_h: Not one of the supported models or not a cure model"
+      Rcerr<<"ThetonCure_h: Not one of the supported models or not a cure model"
 	  <<endl;
     }
     break;
   default:
-    cerr<<"ThetonCure_h: Observation not censored or failure"<<endl;
+    Rcerr<<"ThetonCure_h: Observation not censored or failure"<<endl;
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 
 int nmodel(string model)
@@ -2050,13 +2045,13 @@ int nmodel(string model)
 	    else{
 	      if(model=="PHPO") return(PHPO);
 	      else
-		cerr<<"nmodel: Not one of the supported models"<<endl;
+		Rcerr<<"nmodel: Not one of the supported models"<<endl;
 	    }
 	  }
 	}
       }
     }
   }
-  return(ERROR);
+  return(ERROR_CODE);
 }
 

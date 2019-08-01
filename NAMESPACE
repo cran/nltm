@@ -1,4 +1,4 @@
-useDynLib(nltm)
+useDynLib(nltm, .registration=TRUE)
 import(survival)
 export (
 	"nltm"
@@ -7,3 +7,7 @@ S3method(anova, nltm)
 S3method(print, nltm)
 S3method(summary, nltm)
 S3method(print, summary.nltm)
+
+importFrom("stats", "coef", "formula", "model.extract", "model.matrix",
+           "naprint", "optim", "pchisq", "qnorm", "stat.anova",
+           "terms", "update", "update.formula")
