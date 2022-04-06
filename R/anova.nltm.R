@@ -35,11 +35,11 @@ anova.nltm <- function(object, ..., test=FALSE)
 
   if(object$npred==1){
     if(object$nvar==0)
-      stop(paste("\nModel with no covariantes,",
+      stop(paste("\nModel with no covariates,",
                  "it is not possible to build an anova table.", sep=" "))
   }else{
     if(object$nvar$pred.long==0 & object$nvar$pred.short==0)
-      stop(paste("\nModel with no covariantes,",
+      stop(paste("\nModel with no covariates,",
                  "it is not possible to build an anova table.", sep=" "))
   }
   

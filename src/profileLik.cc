@@ -39,14 +39,17 @@ void predictor(double **xx1, double **xx2, int nvar1, int nvar2, double *beta,
     pred[i][0]=0;
     for(j=0; j<nvar1; j++)
       pred[i][0]+=xx1[i][j]*beta[j];
-    pred[i][0]=exp((cure ? pred[i][0]+beta[icure] : pred[i][0]));
+    if (cure)
+      pred[i][0]=exp(pred[i][0]+beta[icure]);
+    else
+      pred[i][0]=exp(pred[i][0]);
   }
 
   if(pred[0].size()>1){
     for(i=0; i<int(pred.size()); i++){
       pred[i][1]=0;
       for(j=0; j<nvar2; j++)
-	pred[i][1]+=xx2[i][j]*beta[j+nvar1];
+        pred[i][1]+=xx2[i][j]*beta[j+nvar1];
       pred[i][1]=exp(pred[i][1]);
     }
   }
@@ -191,9 +194,9 @@ void profileLik(double *beta, double *x1, double *x2, int *status, int *dd,
 		int *nvar1, int *nvar2, int *ntime, int *nobs, int *npred, 
 		int *verbose, double *plik) 
 {
-  int i, nt, nn, model, nbeta;
+  int nt, nn, model, nbeta;
   double **xx1, **xx2;
-  vector<vector<double> > pred;
+  vector<vector<double> > pred(*nobs, std::vector<double>(*npred, 0.0));
 
   nbeta=(*nvar1)+(*nvar2)+(*cure);
   nt=*ntime;
@@ -228,10 +231,7 @@ void profileLik(double *beta, double *x1, double *x2, int *status, int *dd,
     Rcout<<"s0"<<endl;
     printDVector(s0, nt);
   }
-    
-  pred.resize(nn);
-  for(i=0; i<int(pred.size()); i++)
-    pred[i].resize(*npred);
+
   predictor(xx1, xx2, *nvar1, *nvar2, beta, *cure, pred);
   
   fitSurvival(status, dd, rr, pred, model, *cure, *tol, s0, nt, *verbose);

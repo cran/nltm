@@ -1,9 +1,6 @@
 #ifndef IOSTREAM__ROSTREAM_H
 #define IOSTREAM__ROSTREAM_H
 
-// modified from 
-// http://stackoverflow.com/questions/243696/correctly-over-loading-a-stringbuf-to-replace-cout-in-a-matlab-mex-file
-
 #include <iostream>
 #include <R.h>
 

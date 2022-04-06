@@ -576,7 +576,7 @@ void informationMatrix(double *beta, double *x1, double *x2, int *status,
   int i, j, nt, nn, nbeta, nh, model;
   double **xx1, **xx2, **infMat;
   vector<double> ss, aa, diag;
-  vector<vector<double> > pred, auxMat, d2likbh, d1hb, d2lh;
+  vector<vector<double> > auxMat, d2likbh, d1hb, d2lh;
  
   nt=*ntime;
   nh=nt-*cure;
@@ -594,9 +594,7 @@ void informationMatrix(double *beta, double *x1, double *x2, int *status,
   xx2=dmat(x2, nn, *nvar2);
   infMat=dmat(imat, nbeta, nbeta);
 
-  pred.resize(nn);
-  for(i=0; i<int(pred.size()); i++)
-    pred[i].resize(*npred);
+  vector<vector<double> > pred(*nobs, std::vector<double>(*npred, 0.0));
   predictor(xx1, xx2, *nvar1, *nvar2, beta, *cure, pred);
 
   ss.resize(nt);
