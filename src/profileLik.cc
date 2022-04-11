@@ -39,17 +39,14 @@ void predictor(double **xx1, double **xx2, int nvar1, int nvar2, double *beta,
     pred[i][0]=0;
     for(j=0; j<nvar1; j++)
       pred[i][0]+=xx1[i][j]*beta[j];
-    if (cure)
-      pred[i][0]=exp(pred[i][0]+beta[icure]);
-    else
-      pred[i][0]=exp(pred[i][0]);
+    pred[i][0]=exp((cure ? pred[i][0]+beta[icure] : pred[i][0]));
   }
 
   if(pred[0].size()>1){
     for(i=0; i<int(pred.size()); i++){
       pred[i][1]=0;
       for(j=0; j<nvar2; j++)
-        pred[i][1]+=xx2[i][j]*beta[j+nvar1];
+	pred[i][1]+=xx2[i][j]*beta[j+nvar1];
       pred[i][1]=exp(pred[i][1]);
     }
   }

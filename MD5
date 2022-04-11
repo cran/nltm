@@ -1,4 +1,4 @@
-4b355d6cf7db702e457fca03b094b80d *DESCRIPTION
+5e976d9717a89e8efd2584d3b42c8c33 *DESCRIPTION
 bb0b95932f45162f98abba6376152333 *NAMESPACE
 4008188092bb766859482f0abcc726ac *R/anova.nltm.R
 7de1887ba6b097db4fb022132f96ee3f *R/nltm.R
@@ -22,4 +22,4 @@ f5e79489e856381e773ea9016e2d59cf *src/dmat.cc
 a20e8eee63a66b77a26e2eb8a769962b *src/models.cc
 5393a84856d80870b156204cc498c21e *src/package_init.c
 eabd76e6991fd7150413a4e0320655af *src/printVector.cc
-5f36d55768af232d5e4564e88dca3b3c *src/profileLik.cc
+315d1c23b2b72bb6b287bc8a55138739 *src/profileLik.cc
