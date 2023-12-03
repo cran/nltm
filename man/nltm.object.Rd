@@ -90,7 +90,7 @@
       The \code{na.action} attribute, if any, that was returned by the
       \code{na.action} routine.
     }
-    The object will also contain the following, for documentation see the {lm}
+    The object will also contain the following, for documentation see the \code{lm}
 object: \code{terms}, \code{assign}, \code{formula}, \code{call}, and, optionally, \code{x}, \code{y},
 and/or \code{frame}.
   }

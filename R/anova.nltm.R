@@ -1,4 +1,4 @@
-update.nltm.formula <- function(fit,form,pred)
+updater.nltm.formula <- function(fit,form,pred)
 {
   if(pred=="long"){
     if(fit$npred==1){
@@ -57,7 +57,7 @@ anova.nltm <- function(object, ..., test=FALSE)
       if(nvars>0){
         for(i in rev(termlist)){
           form <- paste(form,i,sep="-")
-          fit <- update.nltm.formula(object,form,"short")
+          fit <- updater.nltm.formula(object,form,"short")
           fit <- update(fit)
           resdev <- c(resdev, -2*fit$loglik[2])
           resdf <- c(resdf,object$n-sum(!is.na(coef(fit))))
@@ -75,14 +75,14 @@ anova.nltm <- function(object, ..., test=FALSE)
   if(nvars>1){
     for(i in rev(termlist[-1])){
       form <- paste(form,i,sep="-")
-      fit <- update.nltm.formula(object,form,"long")
+      fit <- updater.nltm.formula(object,form,"long")
       fit <- update(fit)
       resdev <- c(resdev, -2*fit$loglik[2])
       resdf <- c(resdf,object$n-sum(!is.na(coef(fit))))
     }
     if(cure){
       form <- paste(form,termlist[1],sep="-")
-      fit <- update.nltm.formula(object,form,"long")
+      fit <- updater.nltm.formula(object,form,"long")
       fit <- update(fit)
       resdev <- c(resdev, -2*fit$loglik[2])
       resdf <- c(resdf,object$n-sum(!is.na(coef(fit))))
@@ -92,7 +92,7 @@ anova.nltm <- function(object, ..., test=FALSE)
     if(nvars==1){
       if(cure){
         form <- paste(form,termlist[1],sep="-")
-        fit <- update.nltm.formula(object,form,"long")
+        fit <- updater.nltm.formula(object,form,"long")
         fit <- update(fit)
         resdev <- c(resdev, -2*fit$loglik[2])
         resdf <- c(resdf,object$n-sum(!is.na(coef(fit))))

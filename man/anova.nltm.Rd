@@ -1,7 +1,7 @@
 \name{anova.nltm}
 \alias{anova.nltm}
 \alias{anova.nltmlist}
-\alias{update.nltm.formula}
+\alias{updater.nltm.formula}
 \title{Analysis of deviance table for NLT models}
 \description{
   If a single model is specified, gives a sequential analysis of

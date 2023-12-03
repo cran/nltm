@@ -26,7 +26,7 @@ nltm.control(fnscale=-1, maxit=1000, reltol, factr=1e7, pgtol=0,
   \item{reltol}{
     Relative convergence tolerance.  The algorithm stops if it is unable
     to reduce the value by a factor of 'reltol * (abs(val) + reltol)' at
-    a step. Default is sqrt(.Machine\$double.eps), typically about 1e-8.
+    a step. Default is \code{sqrt(.Machine$double.eps)}, typically about 1e-8.
   }
   \item{factr}{
     Controls the convergence of the "L-BFGS-B" method. Convergence

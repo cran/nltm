@@ -1,6 +1,6 @@
 Package: nltm
-Version: 1.4.4
-Date: 2022-04-07
+Version: 1.4.5
+Date: 2023-11-03
 Title: Non-Linear Transformation Models
 Author: Gilda Garibotti, Alexander Tsodikov, Mark Clements
 Maintainer: Mark Clements <mark.clements@ki.se>
@@ -18,6 +18,6 @@ BugReports: https://github.com/mclements/nltm/issues
 LazyLoad: No
 LazyData: No
 NeedsCompilation: yes
-Packaged: 2022-04-07 10:56:04 UTC; marcle
+Packaged: 2023-12-03 20:07:56 UTC; marcle
 Repository: CRAN
-Date/Publication: 2022-04-11 14:10:09 UTC
+Date/Publication: 2023-12-03 20:20:02 UTC
